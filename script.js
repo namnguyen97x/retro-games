@@ -14,6 +14,7 @@
   const loadingText = document.getElementById("loadingText");
   const fullscreenBtn = document.getElementById("fullscreenBtn");
   const canvasFrame = document.querySelector(".canvas-frame");
+  const virtualController = document.querySelector(".virtual-controller");
   const keybindInputs = document.querySelectorAll(".keybind-input");
   const keybindResetButtons = document.querySelectorAll("[data-reset-player]");
   const cheatNameInput = document.getElementById("cheatNameInput");
@@ -22,6 +23,7 @@
   const cheatClearBtn = document.getElementById("cheatClearBtn");
   const cheatStatus = document.getElementById("cheatStatus");
   const toggleButtons = document.querySelectorAll("[data-toggle-target]");
+  const joystickZone = document.getElementById("joystickZone");
   let remoteList = [];
   let lastLoadedTitle = "";
   let lastLoadedUrl = "";
@@ -79,6 +81,8 @@
   let cheatName = "";
   const gamepadState = new Set(); // tracks held buttons from gamepads
   let gamepadPolling = false;
+  let joystick;
+  const joystickDirs = new Set();
 
   const BUTTON_LOOKUP = {
     A: NES_BUTTON.BUTTON_A,
@@ -252,6 +256,68 @@
   function getCpuMemory() {
     if (!nes || !nes.cpu) return null;
     return nes.cpu.mem || nes.cpu.memory || null;
+  }
+
+  function updateJoystickButtons(nextDirs) {
+    const dirs = ["UP", "DOWN", "LEFT", "RIGHT"];
+    dirs.forEach((dir) => {
+      const key = `joy-${dir}`;
+      const shouldHold = nextDirs.has(dir);
+      const isHeld = joystickDirs.has(key);
+      if (shouldHold && !isHeld) {
+        joystickDirs.add(key);
+        pressButton(1, dir, true);
+      } else if (!shouldHold && isHeld) {
+        joystickDirs.delete(key);
+        pressButton(1, dir, false);
+      }
+    });
+  }
+
+  function clearJoystickButtons() {
+    const dirs = Array.from(joystickDirs);
+    joystickDirs.clear();
+    dirs.forEach((key) => {
+      const dir = key.replace("joy-", "");
+      pressButton(1, dir, false);
+    });
+  }
+
+  function ensureJoystick() {
+    if (!joystickZone || !window.nipplejs) return;
+    if (joystick) return;
+    joystick = nipplejs.create({
+      zone: joystickZone,
+      mode: "static",
+      position: { left: "50%", top: "50%" },
+      color: "#6cffd6",
+      size: 160,
+      lockX: false,
+      lockY: false,
+      restOpacity: 0.6,
+    });
+
+    joystick.on("move", (_evt, data) => {
+      const next = new Set();
+      if (data && data.direction) {
+        if (data.direction.y === "up") next.add("UP");
+        if (data.direction.y === "down") next.add("DOWN");
+        if (data.direction.x === "left") next.add("LEFT");
+        if (data.direction.x === "right") next.add("RIGHT");
+      } else if (data && data.vector) {
+        const { x = 0, y = 0 } = data.vector;
+        const dead = 0.2;
+        if (y < -dead) next.add("UP");
+        if (y > dead) next.add("DOWN");
+        if (x < -dead) next.add("LEFT");
+        if (x > dead) next.add("RIGHT");
+      }
+      updateJoystickButtons(next);
+    });
+
+    joystick.on("end", () => {
+      clearJoystickButtons();
+    });
   }
 
   function applyCheats() {
@@ -554,6 +620,13 @@
   }
 
   function handleKeyDown(event) {
+    // Xử lý phím ESC để thoát fullscreen
+    if (event.code === "Escape" && document.fullscreenElement) {
+      event.preventDefault();
+      document.exitFullscreen().catch(() => {});
+      return;
+    }
+    
     const active = document.activeElement;
     if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA")) {
       if (!active.classList.contains("keybind-input")) return;
@@ -695,9 +768,10 @@
         }
       });
 
+      // Delegate fullscreen updates to the centralized updateMobileControls handler.
+      // This handler simply triggers an update when fullscreen state changes.
       document.addEventListener("fullscreenchange", () => {
-        const active = document.fullscreenElement === canvasFrame;
-        canvasFrame.classList.toggle("fullscreen-active", active);
+        updateMobileControls();
       });
     }
 
@@ -934,6 +1008,10 @@
       remoteSearch.addEventListener("change", () => {
         loadFirstMatch();
       });
+      // Ensure soft keyboard opens on touch
+      remoteSearch.addEventListener("touchend", () => {
+        remoteSearch.focus({ preventScroll: false });
+      });
     }
 
     wireBindingInputs();
@@ -978,4 +1056,49 @@
   }
 
   bootstrap();
+
+  // Mobile UI detection and controls visibility
+  // Show virtual controller when running on a touch device or small viewport,
+  // regardless of fullscreen state. This ensures that mobile users (and
+  // developers simulating mobile devices in DevTools) see the on-screen controls.
+  function shouldUseMobileUI() {
+    return (
+      'ontouchstart' in window ||
+      (navigator.maxTouchPoints && navigator.maxTouchPoints > 0) ||
+      window.matchMedia('(pointer: coarse)').matches ||
+      window.innerWidth <= 900
+    );
+  }
+
+  function updateMobileControls() {
+    const active = document.fullscreenElement === canvasFrame;
+    const mobileUI = shouldUseMobileUI();
+    // Show controls only when fullscreen is active AND we detect a mobile/touch viewport. This prevents
+    // the virtual controller from appearing in windowed mode on small screens.
+    const show = active && mobileUI;
+    canvasFrame.classList.toggle('fullscreen-active', active);
+    document.body.classList.toggle('fullscreen-mobile', show);
+    document.body.classList.toggle('fullscreen-hud', show);
+    if (virtualController) {
+      virtualController.classList.toggle('visible', show);
+    }
+    if (show) {
+      ensureJoystick();
+    } else {
+      clearJoystickButtons();
+    }
+  }
+
+  // Update controls on resize/orientation change and after fullscreen toggle
+  window.addEventListener('resize', updateMobileControls);
+  window.addEventListener('orientationchange', updateMobileControls);
+  document.addEventListener('fullscreenchange', () => {
+    updateMobileControls();
+    if (document.fullscreenElement === canvasFrame && shouldUseMobileUI() && screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+    }
+  });
+
+  // Initial call to set correct state on load
+  updateMobileControls();
 })();

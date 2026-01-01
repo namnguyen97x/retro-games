@@ -268,18 +268,65 @@ canvas#screen {
   border: none;
   border-radius: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 5vh;
   z-index: 60;
 }
 
 .canvas-frame.fullscreen-active canvas#screen {
   width: auto;
-  height: 100vh;
-  min-width: 100vw;
-  max-width: 110vw;
-  max-height: 100vh;
+  max-width: 100vw;
+  height: 60vh;
+  max-height: 60vh;
+  aspect-ratio: 256 / 240;
+  object-fit: contain;
   border-radius: 0;
+}
+
+/* Tăng kích thước game tối đa khi ở chế độ toàn màn hình dọc (portrait) */
+@media (orientation: portrait) {
+  .canvas-frame.fullscreen-active {
+    padding-top: 1vh;
+  }
+  
+  .canvas-frame.fullscreen-active canvas#screen {
+    height: 90vh;
+    max-height: 90vh;
+  }
+  
+  /* Đặt cụm Select/Start ngay dưới màn hình game trong portrait */
+  .canvas-frame.fullscreen-active .virtual-controller.visible .start-select {
+    top: calc(1vh + 90vh + 8px);
+    bottom: auto;
+    transform: translateX(-50%);
+  }
+}
+
+/* Cửa sổ game chiếm 100% chiều dọc khi ở chế độ toàn màn hình ngang (landscape) */
+@media (orientation: landscape) {
+  .canvas-frame.fullscreen-active {
+    padding-top: 0;
+    align-items: center;
+  }
+  
+  .canvas-frame.fullscreen-active canvas#screen {
+    height: 100vh;
+    max-height: 100vh;
+  }
+  
+  /* Hạ vị trí cụm phím xuống một chút trong landscape */
+  .canvas-frame.fullscreen-active .virtual-controller.visible .pad {
+    bottom: 20px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .actions {
+    bottom: 20px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .start-select {
+    top: 16px;
+  }
 }
 
 .canvas-frame.fullscreen-active .screen-actions {
@@ -599,19 +646,111 @@ canvas#screen {
   gap: 10px;
 }
 
+.virtual-controller:not(.visible) {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+.fullscreen-hud .virtual-controller,
+.fullscreen-mobile .virtual-controller,
+.virtual-controller.visible {
+  display: flex !important;
+  pointer-events: auto;
+  z-index: 9999;
+  opacity: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 35vh;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 12px 16px 16px;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.65) 40%),
+    linear-gradient(0deg, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0.35));
+}
+
 .virtual-controller .controller-inner {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  gap: 12px;
+  grid-template-areas:
+    "pad start-select"
+    "pad actions";
+  grid-template-columns: 1.25fr 1fr;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 10px;
   width: 100%;
   height: 100%;
 }
 
-.virtual-controller .pad,
-.virtual-controller .actions {
+.fullscreen-mobile .virtual-controller .controller-inner {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  align-items: flex-end;
+  justify-items: center;
+  grid-template-areas:
+    "pad actions"
+    "pad start-select";
+  grid-template-columns: 1fr 1fr;
+  padding-bottom: 8px;
+}
+
+.virtual-controller .pad {
+  grid-area: pad;
   display: grid;
   place-items: center;
   position: relative;
+}
+
+.actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  align-self: start;
+  margin-top: -8px;
+}
+
+.start-select {
+  grid-area: start-select;
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  align-self: center;
+}
+
+.start-select .touch-button {
+  width: 90px;
+  height: 40px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-weight: 700;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+/* Màu sắc riêng cho nút Select */
+.start-select .touch-button[data-button="SELECT"] {
+  background: linear-gradient(135deg, rgba(108, 255, 214, 0.25), rgba(108, 255, 214, 0.15));
+  border-color: rgba(108, 255, 214, 0.6);
+  box-shadow: 0 2px 8px rgba(108, 255, 214, 0.3);
+}
+
+/* Màu sắc riêng cho nút Start */
+.start-select .touch-button[data-button="START"] {
+  background: linear-gradient(135deg, rgba(255, 95, 109, 0.25), rgba(255, 95, 109, 0.15));
+  border-color: rgba(255, 95, 109, 0.6);
+  box-shadow: 0 2px 8px rgba(255, 95, 109, 0.3);
+}
+
+.start-select .touch-button.pressed {
+  transform: scale(0.95);
+  box-shadow: 0 0 12px rgba(108, 255, 214, 0.5);
 }
 
 .touch-button {
@@ -632,10 +771,20 @@ canvas#screen {
 
 .touch-button.a {
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), rgba(255, 63, 129, 0.8));
+  border-radius: 50%;
+  width: 76px;
+  height: 76px;
+  min-width: 76px;
+  min-height: 76px;
 }
 
 .touch-button.b {
   background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.18), rgba(108, 255, 214, 0.8));
+  border-radius: 50%;
+  width: 76px;
+  height: 76px;
+  min-width: 76px;
+  min-height: 76px;
 }
 
 .touch-button.pressed {
@@ -645,45 +794,27 @@ canvas#screen {
 }
 
 .dpad {
-  width: 160px;
-  height: 160px;
+  width: 190px;
+  height: 190px;
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
   gap: 10px;
+  padding: 12px;
+  border-radius: 18px;
+  background: none;
 }
 
 .dpad .touch-button {
   min-width: unset;
   min-height: unset;
+  min-width: 56px;
+  min-height: 56px;
 }
 
 .dpad .spacer {
   pointer-events: none;
 }
-
-.actions {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
-
-.start-select {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  justify-content: center;
-  align-items: center;
-}
-
-.start-select .touch-button {
-  width: 80px;
-  height: 36px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-}
-
 @media (max-width: 1080px) {
   .player-layout {
     grid-template-columns: 1fr;
@@ -691,8 +822,8 @@ canvas#screen {
 }
 
 @media (max-width: 900px) {
-  .virtual-controller {
-    display: flex;
+  .virtual-controller:not(.visible) {
+    display: none;
     pointer-events: none;
   }
 }
@@ -703,6 +834,287 @@ canvas#screen {
   }
 
   .virtual-controller .controller-inner {
-    grid-template-columns: 1fr 0.7fr 1fr;
+    grid-template-areas:
+      "pad start-select"
+      "pad actions";
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 8px;
   }
+}
+
+@media (max-width: 480px) {
+  .virtual-controller {
+    height: 38vh;
+    padding: 10px 10px 14px;
+    gap: 8px;
+  }
+
+  .virtual-controller .controller-inner {
+    grid-template-areas:
+      "pad start-select"
+      "pad actions";
+    grid-template-columns: 1.1fr 0.9fr;
+    gap: 8px;
+  }
+
+  .touch-button {
+    min-width: 46px;
+    min-height: 46px;
+    font-size: 0.95rem;
+  }
+
+  .dpad {
+    width: 155px;
+    height: 155px;
+    gap: 8px;
+    padding: 10px;
+  }
+
+  .virtual-controller .touch-button.a,
+  .virtual-controller .touch-button.b {
+    min-width: 60px;
+    min-height: 60px;
+    width: 62px;
+    height: 62px;
+    font-size: 1.05rem;
+  }
+
+  .virtual-controller .actions {
+    justify-content: center;
+    gap: 6px;
+  }
+}
+
+.fullscreen-hud .dpad {
+  display: none;
+}
+
+.fullscreen-hud .joystick-zone {
+  display: flex;
+}
+
+@media (max-width: 640px) {
+  .page-shell {
+    padding: 12px 10px 64px;
+  }
+
+  .top-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .player-layout {
+    gap: 12px;
+  }
+
+  .screen-wrap {
+    min-width: 100%;
+    max-width: none;
+    width: 100%;
+  }
+
+  .panel {
+    padding: 12px;
+  }
+
+  .canvas-frame {
+    padding: 8px;
+  }
+
+  .btn-row {
+    flex-wrap: wrap;
+  }
+
+  .feature-toggles {
+    width: 100%;
+  }
+}
+
+
+.joystick-zone { position:absolute; inset:0; display:none; align-items:center; justify-content:center; }
+.joystick-zone .nipple { opacity:0.95; }
+
+/* Position the virtual controller inside the canvas frame when in fullscreen mobile.
+   This overrides the default fixed positioning so that controls overlay the game screen directly. */
+/*
+ * When the virtual controller is inside the canvas frame we need it to
+ * overlay above the game screen. Use a high z-index so it appears on
+ * top of the canvas content, and set it to cover the entire frame.
+ */
+.canvas-frame .virtual-controller {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: auto;
+  z-index: 100;
+}
+
+.canvas-frame .virtual-controller:not(.visible) {
+  display: none !important;
+  pointer-events: none !important;
+}
+
+/*
+ * When visible inside the canvas frame, use a flexible container that fills the
+ * entire screen area. We avoid relying on grid-based placement here and
+ * instead absolutely position each control group (D‑pad, actions, start/select)
+ * for a more predictable layout across devices. The container acts as a
+ * relative positioning context.
+ */
+.canvas-frame .virtual-controller.visible {
+  display: flex !important;
+  pointer-events: auto;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.4) 100%);
+  /* Làm mờ nhẹ chỉ phần dưới để không che mất màn hình game */
+  pointer-events: none;
+}
+
+/* Chỉ các nút mới có pointer-events */
+.canvas-frame .virtual-controller.visible .touch-button,
+.canvas-frame .virtual-controller.visible .joystick-zone {
+  pointer-events: auto;
+}
+
+/* Within the controller container, use absolute positioning for each group. */
+.canvas-frame .virtual-controller.visible .controller-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  /* Override any grid definitions from other media queries */
+  display: block;
+}
+
+/* Position the D‑pad in the lower left corner */
+.canvas-frame .virtual-controller.visible .pad {
+  position: absolute;
+  bottom: 80px;
+  left: 16px;
+  width: 160px;
+  height: 160px;
+  display: grid;
+  place-items: center;
+  z-index: 1;
+}
+
+/* Position the A/B action buttons aligned with the center of D-pad */
+.canvas-frame .virtual-controller.visible .actions {
+  position: absolute;
+  bottom: 80px;
+  right: 16px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+/* Position the start and select buttons at the top center */
+.canvas-frame .virtual-controller.visible .start-select {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  z-index: 1;
+  min-width: 200px;
+  justify-content: center;
+}
+
+/* Ensure the D‑pad scales to fit its container when absolutely positioned */
+.canvas-frame .virtual-controller.visible .dpad {
+  width: 100%;
+  height: 100%;
+  gap: 8px;
+  padding: 8px;
+}
+
+/* Responsive adjustments for small screens in fullscreen */
+@media (max-width: 480px) {
+  .canvas-frame.fullscreen-active {
+    padding-top: 3vh;
+  }
+  
+  .canvas-frame.fullscreen-active canvas#screen {
+    height: 55vh;
+    max-height: 55vh;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .pad {
+    width: 140px;
+    height: 140px;
+    bottom: 70px;
+    left: 12px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .actions {
+    bottom: 70px;
+    right: 12px;
+    gap: 12px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .start-select {
+    top: 12px;
+    gap: 10px;
+    min-width: 180px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .dpad {
+    width: 100%;
+    height: 100%;
+    gap: 6px;
+    padding: 6px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .touch-button.a,
+  .canvas-frame.fullscreen-active .virtual-controller.visible .touch-button.b {
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
+    min-height: 64px;
+  }
+}
+
+/* Ensure the virtual controller appears only when the canvas frame is in fullscreen mode */
+.canvas-frame.fullscreen-active .virtual-controller {
+  /* Hidden by default until the .visible class is applied */
+  display: none;
+  pointer-events: none;
+}
+
+/*
+ * When the canvas frame is in fullscreen and the controller is visible,
+ * ensure it sits above all other elements in that stacking context. The
+ * z-index here reinforces the value from the base selector.
+ */
+.canvas-frame.fullscreen-active .virtual-controller.visible {
+  display: flex !important;
+  pointer-events: none !important;
+  z-index: 1000 !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 1 !important;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.2) 60%, rgba(0, 0, 0, 0.4) 100%) !important;
+}
+
+/* Chỉ các nút mới có pointer-events trong fullscreen */
+.canvas-frame.fullscreen-active .virtual-controller.visible .touch-button,
+.canvas-frame.fullscreen-active .virtual-controller.visible .joystick-zone {
+  pointer-events: auto !important;
 }

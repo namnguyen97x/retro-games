@@ -32,9 +32,6 @@
             <div class="screen-meta" id="currentGame">No ROM loaded</div>
           </div>
           <div class="badge-row">
-            <span class="badge">60fps</span>
-            <span class="badge">Audio On</span>
-            <span class="badge">Touch Ready</span>
             <div class="feature-toggles">
               <button class="pill-button" type="button" data-toggle-target="keymap-p1">BindKey P1</button>
               <button class="pill-button" type="button" data-toggle-target="keymap-p2">BindKey P2</button>
@@ -55,6 +52,38 @@
           <div class="screen-actions">
             <button class="icon-button" id="fullscreenBtn" title="Fullscreen">⤢</button>
           </div>
+
+      <!-- Virtual controller overlay (moved into canvas frame for mobile fullscreen) -->
+      <div class="virtual-controller">
+        <div class="controller-inner">
+          <div class="pad">
+            <div id="joystickZone" class="joystick-zone"></div>
+            <div class="dpad">
+              <div class="spacer"></div>
+              <button class="touch-button up" data-button="UP">^</button>
+              <div class="spacer"></div>
+
+              <button class="touch-button left" data-button="LEFT">&lt;</button>
+              <div class="spacer"></div>
+              <button class="touch-button right" data-button="RIGHT">&gt;</button>
+
+              <div class="spacer"></div>
+              <button class="touch-button down" data-button="DOWN">v</button>
+              <div class="spacer"></div>
+            </div>
+          </div>
+
+          <div class="start-select">
+            <button class="touch-button" data-button="SELECT">Select</button>
+            <button class="touch-button" data-button="START">Start</button>
+          </div>
+
+          <div class="actions">
+            <button class="touch-button b" data-button="B">B</button>
+            <button class="touch-button a" data-button="A">A</button>
+          </div>
+        </div>
+      </div>
         </div>
         <p class="status" id="statusLine">Upload a .nes ROM to start playing.</p>
       </section>
@@ -73,7 +102,7 @@
           <div class="field">
             <label for="remoteLibrarySelect">MyRient Library (preset)</label>
             <div class="btn-row">
-              <input type="text" id="remoteSearch" class="input" placeholder="Search after fetching list" list="remoteDatalist">
+              <input type="text" id="remoteSearch" class="input" placeholder="Search after fetching list" list="remoteDatalist" inputmode="search" autocomplete="off" enterkeyhint="search">
               <button class="btn ghost" type="button" id="remoteListBtn">Fetch list from MyRient</button>
             </div>
             <datalist id="remoteDatalist"></datalist>
@@ -202,38 +231,10 @@
     </main>
   </div>
 
-  <div class="virtual-controller">
-    <div class="controller-inner">
-      <div class="pad">
-        <div class="dpad">
-          <div class="spacer"></div>
-          <button class="touch-button up" data-button="UP">^</button>
-          <div class="spacer"></div>
-
-          <button class="touch-button left" data-button="LEFT">&lt;</button>
-          <div class="spacer"></div>
-          <button class="touch-button right" data-button="RIGHT">&gt;</button>
-
-          <div class="spacer"></div>
-          <button class="touch-button down" data-button="DOWN">v</button>
-          <div class="spacer"></div>
-        </div>
-      </div>
-
-      <div class="start-select">
-        <button class="touch-button" data-button="SELECT">Select</button>
-        <button class="touch-button" data-button="START">Start</button>
-      </div>
-
-      <div class="actions">
-        <button class="touch-button b" data-button="B">B</button>
-        <button class="touch-button a" data-button="A">A</button>
-      </div>
-    </div>
-  </div>
 
   <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
   <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
