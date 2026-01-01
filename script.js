@@ -663,17 +663,37 @@
     const buttons = document.querySelectorAll(".touch-button[data-button]");
     buttons.forEach((btn) => {
       const buttonName = btn.dataset.button;
+      const directions = btn.dataset.directions ? JSON.parse(btn.dataset.directions) : null;
+      
       const start = (event) => {
         event.preventDefault();
         ensureAudio();
         btn.classList.add("pressed");
-        pressButton(1, buttonName, true);
+        
+        // Nếu là nút chéo, nhấn cả 2 hướng
+        if (directions && directions.length === 2) {
+          directions.forEach((dir) => {
+            pressButton(1, dir, true);
+          });
+        } else {
+          pressButton(1, buttonName, true);
+        }
       };
+      
       const end = (event) => {
         event.preventDefault();
         btn.classList.remove("pressed");
-        pressButton(1, buttonName, false);
+        
+        // Nếu là nút chéo, thả cả 2 hướng
+        if (directions && directions.length === 2) {
+          directions.forEach((dir) => {
+            pressButton(1, dir, false);
+          });
+        } else {
+          pressButton(1, buttonName, false);
+        }
       };
+      
       btn.addEventListener("touchstart", start, { passive: false });
       btn.addEventListener("touchend", end, { passive: false });
       btn.addEventListener("touchcancel", end, { passive: false });

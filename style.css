@@ -799,17 +799,34 @@ canvas#screen {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
-  gap: 10px;
+  gap: 8px;
   padding: 12px;
   border-radius: 18px;
-  background: none;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(108, 255, 214, 0.3);
 }
 
 .dpad .touch-button {
   min-width: unset;
   min-height: unset;
-  min-width: 56px;
-  min-height: 56px;
+  min-width: 50px;
+  min-height: 50px;
+  font-size: 1.2rem;
+}
+
+.dpad .touch-button.diagonal {
+  background: rgba(108, 255, 214, 0.2);
+  border-color: rgba(108, 255, 214, 0.5);
+  font-size: 1.4rem;
+}
+
+.dpad .touch-button.up,
+.dpad .touch-button.down,
+.dpad .touch-button.left,
+.dpad .touch-button.right {
+  background: rgba(108, 255, 214, 0.25);
+  border-color: rgba(108, 255, 214, 0.6);
+  font-weight: 700;
 }
 
 .dpad .spacer {
@@ -885,12 +902,8 @@ canvas#screen {
   }
 }
 
-.fullscreen-hud .dpad {
-  display: none;
-}
-
 .fullscreen-hud .joystick-zone {
-  display: flex;
+  display: none;
 }
 
 @media (max-width: 640px) {
@@ -1072,8 +1085,18 @@ canvas#screen {
   .canvas-frame.fullscreen-active .virtual-controller.visible .dpad {
     width: 100%;
     height: 100%;
-    gap: 6px;
-    padding: 6px;
+    gap: 5px;
+    padding: 8px;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .dpad .touch-button {
+    min-width: 42px;
+    min-height: 42px;
+    font-size: 1rem;
+  }
+  
+  .canvas-frame.fullscreen-active .virtual-controller.visible .dpad .touch-button.diagonal {
+    font-size: 1.2rem;
   }
   
   .canvas-frame.fullscreen-active .virtual-controller.visible .touch-button.a,
