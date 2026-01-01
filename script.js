@@ -29,6 +29,7 @@
   let lastLoadedUrl = "";
   let activeFetchUrl = "";
   let pendingRomFile = null;
+  let currentAbortController = null;
 
   const SCREEN_WIDTH = 256;
   const SCREEN_HEIGHT = 240;
@@ -817,7 +818,7 @@
 
     wireTouchControls();
     wireToggleSections();
-    const fetchArrayBufferWithFallback = async (url, onProgress) => {
+    const fetchArrayBufferWithFallback = async (url, onProgress, signal) => {
       const proxies = [
         "", // direct
         "https://cors.isomorphic-git.org/",
@@ -827,14 +828,21 @@
       ];
       let lastError = null;
       for (const prefix of proxies) {
+        // Kiểm tra nếu đã bị hủy
+        if (signal && signal.aborted) {
+          throw new DOMException('Aborted', 'AbortError');
+        }
+        
         const target = prefix ? `${prefix}${encodeURIComponent(url)}` : url;
         try {
-          const res = await fetch(target, { cache: "no-cache" });
+          const res = await fetch(target, { cache: "no-cache", signal });
           if (!res.ok) throw new Error(`HTTP ${res.status}`);
           // Stream to track speed
           if (!res.body || !res.body.getReader) {
             const buf = await res.arrayBuffer();
-            if (onProgress) onProgress({ received: buf.byteLength, total: buf.byteLength, elapsed: 0.001 });
+            if (onProgress && !(signal && signal.aborted)) {
+              onProgress({ received: buf.byteLength, total: buf.byteLength, elapsed: 0.001 });
+            }
             return buf;
           }
           const total = Number(res.headers.get("Content-Length")) || 0;
@@ -845,9 +853,16 @@
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
+            
+            // Kiểm tra nếu đã bị hủy
+            if (signal && signal.aborted) {
+              reader.cancel();
+              throw new DOMException('Aborted', 'AbortError');
+            }
+            
             chunks.push(value);
             received += value.length;
-            if (onProgress) {
+            if (onProgress && !(signal && signal.aborted)) {
               const elapsed = Math.max((performance.now() - start) / 1000, 0.001);
               onProgress({ received, total, elapsed });
             }
@@ -858,12 +873,16 @@
             buffer.set(c, offset);
             offset += c.length;
           }
-          if (onProgress) {
+          if (onProgress && !(signal && signal.aborted)) {
             const elapsed = Math.max((performance.now() - start) / 1000, 0.001);
             onProgress({ received, total: total || received, elapsed });
           }
           return buffer.buffer;
         } catch (err) {
+          // Nếu bị hủy, throw ngay lập tức
+          if (err.name === 'AbortError') {
+            throw err;
+          }
           lastError = err;
           // Try next proxy
         }
@@ -873,31 +892,58 @@
 
     const fetchAndLoad = async (url, label) => {
       if (!url) return;
-      if (url === lastLoadedUrl || url === activeFetchUrl) {
-        // Prevent duplicate fetch/reset when the same ROM is already loaded or in-flight
+      // Cho phép hủy quá trình load hiện tại và bắt đầu load game mới
+      if (url === lastLoadedUrl) {
+        // Chỉ chặn nếu game đã được load (không phải đang load)
         setLoading("", false);
         return;
       }
+      
+      // Hủy quá trình fetch đang chạy nếu có
+      if (currentAbortController) {
+        currentAbortController.abort();
+        currentAbortController = null;
+      }
+      
       setStatus(`Fetching ROM: ${label || url}`);
       setLoading("Preparing download...");
       activeFetchUrl = url;
+      
+      // Tạo AbortController mới cho request này
+      currentAbortController = new AbortController();
+      const signal = currentAbortController.signal;
+      
       try {
         ensureAudio();
         const buffer = await fetchArrayBufferWithFallback(url, ({ received, total, elapsed }) => {
+          // Kiểm tra nếu đã bị hủy
+          if (signal.aborted) return;
           const speed = formatSpeed(received / Math.max(elapsed, 0.001));
           const pct = total ? ` (${((received / total) * 100).toFixed(1)}%)` : "";
           const size = received >= 1_000_000 ? `${(received / 1_000_000).toFixed(2)} MB` : `${(received / 1_000).toFixed(0)} KB`;
           setLoading(`Downloading... ${size}${pct} @ ${speed}`);
           setStatus(`Downloading: ${size}${pct} @ ${speed}`);
-        });
+        }, signal);
+        
+        // Kiểm tra lại nếu đã bị hủy
+        if (signal.aborted) return;
+        
         await handleRomBuffer(buffer, label || (url.split("/").pop() || "Remote ROM"));
         lastLoadedUrl = url;
       } catch (error) {
+        // Bỏ qua lỗi nếu đã bị hủy
+        if (error.name === 'AbortError') {
+          setStatus("Load cancelled. Starting new game...");
+          return;
+        }
         console.error(error);
         setStatusWithLink(error.message || "Failed to fetch ROM (likely CORS).", url);
         setLoading("", false);
       } finally {
-        activeFetchUrl = "";
+        if (activeFetchUrl === url) {
+          activeFetchUrl = "";
+        }
+        currentAbortController = null;
       }
     };
 
@@ -948,7 +994,8 @@
       const filtered = applySearchFilter();
       if (!filtered.length) return;
       const match = filtered[0];
-      if (match.url === lastLoadedUrl || match.url === activeFetchUrl) return;
+      // Cho phép load game mới ngay cả khi đang load game khác
+      if (match.url === lastLoadedUrl) return;
       await fetchAndLoad(match.url, match.title);
     };
 
@@ -996,7 +1043,8 @@
         const filtered = applySearchFilter();
         const term = remoteSearch.value.trim().toLowerCase();
         const exact = filtered.find((item) => item.title.toLowerCase() === term);
-        if (exact && exact.url !== lastLoadedUrl && exact.url !== activeFetchUrl) {
+        // Cho phép load game mới ngay cả khi đang load game khác
+        if (exact && exact.url !== lastLoadedUrl) {
           fetchAndLoad(exact.url, exact.title);
         }
       });
