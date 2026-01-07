@@ -507,6 +507,7 @@ body.dark .pill--ghost {
 
 .frame {
   position: relative;
+  width: 100%;
   background: #000;
   border-radius: 18px;
   border: 2px solid rgba(0, 149, 214, 0.2);
@@ -543,7 +544,9 @@ body.dark .pill--ghost {
 
 #game {
   width: 100%;
-  min-height: 420px;
+  height: 70vh;
+  min-height: 60vh;
+  max-height: 85vh;
   background: #000;
 }
 
@@ -679,7 +682,9 @@ select.input option {
     padding: 16px 12px 72px;
   }
   #game {
-    min-height: 320px;
+    height: 78vh;
+    min-height: 65vh;
+    max-height: 90vh;
   }
 }
 

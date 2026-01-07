@@ -108,21 +108,45 @@
     window.EJS_controlScheme = CORE;
     const isPsx = CORE === "psx" || CORE === "ps1" || CORE === "psx-fast";
     const padSettings = {
-      layout: isPsx ? "psx" : "extended",
-      mode: isPsx ? "psx" : CORE,
-      type: isPsx ? "psx" : CORE,
+      layout: "extended",
+      mode: CORE,
+      type: CORE,
       forceVisible: true,
-      buttons: isPsx
-        ? ["l1", "r1", "l2", "r2"]
-        : CORE === "snes"
-          ? ["l1", "r1"]
-          : [],
+      buttons: CORE === "snes" ? ["l1", "r1"] : [],
     };
+
+    // Custom PSX layout to avoid overlapping buttons on mobile
+    const psxCustomPad = [
+      // D-pad (smaller, higher)
+      {
+        type: "dpad",
+        location: "left",
+        left: "10%",
+        top: "60%",
+        joystickInput: false,
+        inputValues: [4, 5, 6, 7],
+        size: 0.22,
+      },
+      // Shoulders
+      { type: "button", text: "L1", id: "l1", location: "top", left: 12, top: 46, block: true, input_value: 10 },
+      { type: "button", text: "L2", id: "l2", location: "top", left: 12, top: 78, block: true, input_value: 12 },
+      { type: "button", text: "R1", id: "r1", location: "top", right: 12, top: 46, block: true, input_value: 11 },
+      { type: "button", text: "R2", id: "r2", location: "top", right: 12, top: 78, block: true, input_value: 13 },
+      // Face buttons (diamond, shifted down)
+      { type: "button", text: "Y", id: "y", location: "right", left: 20, top: 60, bold: true, input_value: 9 },
+      { type: "button", text: "X", id: "x", location: "right", left: -30, top: 100, bold: true, input_value: 1 },
+      { type: "button", text: "B", id: "b", location: "right", left: 70, top: 100, bold: true, input_value: 8 },
+      { type: "button", text: "A", id: "a", location: "right", left: 20, top: 140, bold: true, input_value: 0 },
+      // Start / Select
+      { type: "button", text: "Select", id: "select", location: "center", left: -20, top: 140, fontSize: 14, block: true, input_value: 2 },
+      { type: "button", text: "Start", id: "start", location: "center", left: 60, top: 140, fontSize: 14, block: true, input_value: 3 },
+    ];
     if (isPsx) {
       window.EJS_PSX_FORCE_DUALSHOCK = true;
-      window.EJS_virtualGamepadMode = "psx";
+      // Use custom virtual pad layout so positions/sizes below take effect
+      window.EJS_virtualGamepadMode = "custom";
     }
-    window.EJS_VirtualGamepadSettings = padSettings;
+    window.EJS_VirtualGamepadSettings = isPsx ? psxCustomPad : padSettings;
     window.EJS_ready = () => {
       hideInternalFullscreen();
       setTimeout(hideInternalFullscreen, 300);
