@@ -1,241 +1,76 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NES Player | Web Retro Arcade</title>
+  <title>NES | EmulatorJS Player</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <div class="page-shell">
-    <div class="top-bar">
-      <div class="brand">
-        <div class="pill">NES Emulator</div>
-        <div>
-          <div class="eyebrow" style="margin:0;">Web Retro Arcade</div>
-          <div class="screen-meta">Keyboard + Touch ready</div>
-        </div>
-      </div>
-      <div class="card-actions">
-        <a class="btn ghost" href="index.html">Back to Hub</a>
-      </div>
+<body class="page page--player">
+  <div class="topbar">
+    <div class="brand"></div>
+    <div class="topbar__actions">
+      <a class="btn" href="index.html">&lt;- Ve trang chon he may</a>
     </div>
-
-    <main class="player-layout">
-      <section class="panel screen-wrap">
-        <div class="screen-header">
-          <div>
-            <p class="card-label">Now Playing</p>
-            <div class="screen-meta" id="currentGame">No ROM loaded</div>
-          </div>
-          <div class="badge-row">
-            <div class="feature-toggles">
-              <button class="pill-button" type="button" data-toggle-target="keymap-p1">BindKey P1</button>
-              <button class="pill-button" type="button" data-toggle-target="keymap-p2">BindKey P2</button>
-              <button class="pill-button" type="button" data-toggle-target="cheats">Cheats</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="canvas-frame">
-          <canvas id="screen" width="256" height="240"></canvas>
-          <div class="screen-loader" id="screenLoader" aria-live="polite">
-            <div class="spinner"></div>
-            <div class="loading-text">
-              <span id="loadingText">Loading...</span>
-              <span class="dots"><span>.</span><span>.</span><span>.</span></span>
-            </div>
-          </div>
-          <div class="screen-actions">
-            <button class="icon-button" id="fullscreenBtn" title="Fullscreen">⤢</button>
-          </div>
-
-      <!-- Virtual controller overlay (moved into canvas frame for mobile fullscreen) -->
-      <div class="virtual-controller">
-        <div class="controller-inner">
-          <div class="pad">
-            <div class="dpad">
-              <button class="touch-button diagonal" data-button="UP_LEFT" data-directions='["UP","LEFT"]'>↖</button>
-              <button class="touch-button up" data-button="UP">^</button>
-              <button class="touch-button diagonal" data-button="UP_RIGHT" data-directions='["UP","RIGHT"]'>↗</button>
-
-              <button class="touch-button left" data-button="LEFT">&lt;</button>
-              <div class="spacer"></div>
-              <button class="touch-button right" data-button="RIGHT">&gt;</button>
-
-              <button class="touch-button diagonal" data-button="DOWN_LEFT" data-directions='["DOWN","LEFT"]'>↙</button>
-              <button class="touch-button down" data-button="DOWN">v</button>
-              <button class="touch-button diagonal" data-button="DOWN_RIGHT" data-directions='["DOWN","RIGHT"]'>↘</button>
-            </div>
-          </div>
-
-          <div class="start-select">
-            <button class="touch-button" data-button="SELECT">Select</button>
-            <button class="touch-button" data-button="START">Start</button>
-          </div>
-
-          <div class="actions">
-            <button class="touch-button b" data-button="B">B</button>
-            <button class="touch-button a" data-button="A">A</button>
-          </div>
-        </div>
-      </div>
-        </div>
-        <p class="status" id="statusLine">Upload a .nes ROM to start playing.</p>
-      </section>
-
-      <aside class="panel">
-        <div class="controls">
-          <div class="field">
-            <label for="romInput">Upload ROM (.nes)</label>
-            <div class="btn-row">
-              <input type="file" id="romInput" accept=".nes" class="input">
-              <button class="btn primary" type="button" id="romLoadBtn">Load ROM</button>
-            </div>
-            <p class="hint">Runs locally in your browser. Nothing is uploaded to a server. ZIP of a .nes file is also supported. Choose file then click Load ROM to confirm.</p>
-          </div>
-
-          <div class="field">
-            <label for="remoteLibrarySelect">MyRient Library (preset)</label>
-            <div class="btn-row">
-              <input type="text" id="remoteSearch" class="input" placeholder="Search after fetching list" list="remoteDatalist" inputmode="search" autocomplete="off" enterkeyhint="search">
-              <button class="btn ghost" type="button" id="remoteListBtn">Fetch list from MyRient</button>
-            </div>
-            <datalist id="remoteDatalist"></datalist>
-            <p class="hint">Fetch list first, search to filter, pressing Enter or choosing a suggestion will auto-load. CORS may block remote fetch; if so, download and upload manually.</p>
-          </div>
-
-          <div class="field">
-            <label>Keyboard Controls</label>
-            <div class="keymap">
-              <div class="item">Move: Arrow Keys</div>
-              <div class="item">A: Z</div>
-              <div class="item">B: X</div>
-              <div class="item">Start: Enter</div>
-              <div class="item">Select: Ctrl</div>
-            </div>
-          </div>
-
-          <div class="field toggle-section" id="section-keymap-p1">
-            <label>Custom Key Mapping - Player 1</label>
-            <div class="keymap-config">
-              <div class="keymap-group">
-                <div class="group-header">
-                  <span>Player 1</span>
-                  <button class="btn ghost btn-xs" type="button" data-reset-player="1">Reset P1</button>
-                </div>
-                <div class="keybind-grid">
-                  <label class="keybind">
-                    <span>Up</span>
-                    <input class="keybind-input" data-player="1" data-button="UP" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Down</span>
-                    <input class="keybind-input" data-player="1" data-button="DOWN" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Left</span>
-                    <input class="keybind-input" data-player="1" data-button="LEFT" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Right</span>
-                    <input class="keybind-input" data-player="1" data-button="RIGHT" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>A</span>
-                    <input class="keybind-input" data-player="1" data-button="A" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>B</span>
-                    <input class="keybind-input" data-player="1" data-button="B" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Start</span>
-                    <input class="keybind-input" data-player="1" data-button="START" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Select</span>
-                    <input class="keybind-input" data-player="1" data-button="SELECT" readonly>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <p class="hint">Click a box and press any key to remap. Saved locally for P1.</p>
-          </div>
-
-          <div class="field toggle-section" id="section-keymap-p2">
-            <label>Custom Key Mapping - Player 2</label>
-            <div class="keymap-config">
-              <div class="keymap-group">
-                <div class="group-header">
-                  <span>Player 2</span>
-                  <button class="btn ghost btn-xs" type="button" data-reset-player="2">Reset P2</button>
-                </div>
-                <div class="keybind-grid">
-                  <label class="keybind">
-                    <span>Up</span>
-                    <input class="keybind-input" data-player="2" data-button="UP" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Down</span>
-                    <input class="keybind-input" data-player="2" data-button="DOWN" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Left</span>
-                    <input class="keybind-input" data-player="2" data-button="LEFT" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Right</span>
-                    <input class="keybind-input" data-player="2" data-button="RIGHT" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>A</span>
-                    <input class="keybind-input" data-player="2" data-button="A" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>B</span>
-                    <input class="keybind-input" data-player="2" data-button="B" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Start</span>
-                    <input class="keybind-input" data-player="2" data-button="START" readonly>
-                  </label>
-                  <label class="keybind">
-                    <span>Select</span>
-                    <input class="keybind-input" data-player="2" data-button="SELECT" readonly>
-                  </label>
-                </div>
-              </div>
-            </div>
-            <p class="hint">Click a box and press any key to remap. Saved locally for P2.</p>
-          </div>
-
-          <div class="field toggle-section" id="section-cheats">
-            <label for="cheatInput">Cheat codes</label>
-            <div class="cheat-stack">
-              <input type="text" id="cheatNameInput" class="input" placeholder="Cheat name (optional)">
-              <textarea id="cheatInput" class="input textarea" placeholder="Cheat code. One per line, format: address=value (hex or dec). Example: 0xC000=FF"></textarea>
-            </div>
-            <div class="btn-row">
-              <button class="btn primary" type="button" id="cheatApplyBtn">Apply cheats</button>
-              <button class="btn ghost" type="button" id="cheatClearBtn">Clear</button>
-            </div>
-            <p class="hint" id="cheatStatus">No cheats active.</p>
-          </div>
-        </div>
-      </aside>
-    </main>
   </div>
 
+  <div class="player-layout">
+    <section class="panel">
+      <h2>Man hinh choi</h2>
+      <div class="frame">
+        <div class="screen-overlay" id="overlayStatus"></div>
+        <div id="game" aria-live="polite"></div>
+      </div>
+      <ul class="tips">
+        <li>Nhan menu noi (ba gach) trong khung EmulatorJS de vao Settings &gt; Controls (remap P1/P2) hoac Cheats.</li>
+        <li>Phim mac dinh: mui ten di chuyen, Z/A, X/B, Enter/Start, Shift/Select. Gamepad vat ly duoc nhan tu dong.</li>
+        <li>Neu can tai ROM khac, chon file/URL va bam "Nap ROM NES".</li>
+      </ul>
+    </section>
 
-  <script src="https://unpkg.com/jsnes/dist/jsnes.min.js"></script>
-  <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/nipplejs@0.9.0/dist/nipplejs.min.js"></script>
+    <aside class="panel">
+      <h2>Nap ROM</h2>
+      <div class="controls">
+        <div class="field">
+          <label for="romFile">Upload ROM (.nes hoac .zip)</label>
+          <input class="input" type="file" id="romFile" accept=".nes,.zip,application/zip">
+          <p class="hint">File chi chay cuc bo, khong tai len server.</p>
+        </div>
+
+        <div class="field">
+          <label for="romUrl">Hoac dan URL ROM truc tiep</label>
+          <input class="input" type="url" id="romUrl" placeholder="https://.../game.nes hoac .zip">
+          <p class="hint">Neu bi chan CORS, hay tai ve va dung upload.</p>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn btn--primary" id="loadBtn">Nap ROM NES</button>
+          <button class="btn" id="clearBtn">Xoa cau hinh</button>
+        </div>
+
+        <div class="field">
+          <label>Thu vien Myrient (NES)</label>
+          <div class="inline-select">
+            <button class="btn" id="fetchMyrientBtn" type="button">Lay danh sach</button>
+            <select class="input" id="myrientSelect" disabled>
+              <option>Chua tai</option>
+            </select>
+            <button class="btn btn--primary" id="loadMyrientBtn" type="button" disabled>Nap</button>
+          </div>
+          <p class="hint" id="myrientStatus">Chua tai danh sach.</p>
+        </div>
+
+        <div class="field">
+          <label>Meo thao tac</label>
+          <p class="hint">Esc hoac icon menu trong khung EmulatorJS de mo Quick Menu. O do co Cheats, Save/Load state, chinh phim P1/P2, bat phim ao.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
   <script src="script.js"></script>
 </body>
 </html>
-
-

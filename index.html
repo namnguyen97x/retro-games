@@ -1,59 +1,112 @@
 <!doctype html>
-<html lang="en">
+<html lang="vi">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Web Retro Arcade</title>
+  <title>Retro Hub | EmulatorJS</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&family=Space+Grotesk:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="landing-body">
-  <div class="landing-wrap">
-    <header class="hero">
-      <p class="eyebrow">NeoArcade // 8-bit Revival</p>
-      <h1 class="page-title">Web Retro Arcade</h1>
-      <p class="lede">
-        Step into a neon-drenched dashboard built for classic pixels. Choose a console to start playing directly in your browser.
-      </p>
-    </header>
-
-    <section class="grid-menu">
-      <div class="grid-card active">
-        <div class="card-body">
-          <p class="card-label">Now Live</p>
-          <h2 class="card-title">Nintendo (NES)</h2>
-          <p class="card-copy">Play NES classics with keyboard or touch controls. Upload your own ROMs and jump right in.</p>
-        </div>
-        <div class="card-actions">
-          <a class="btn primary" href="nes-player.html">Launch</a>
-          <button class="btn ghost" type="button" disabled>Library Sync</button>
-        </div>
+<body class="page page--landing">
+  <header class="navbar">
+    <div class="nav-left">
+      <div class="logo-mark">EJS</div>
+      <div>
+        <p class="eyebrow" style="margin:0">EmulatorJS</p>
+        <strong class="logo-title">Retro Hub</strong>
       </div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn--ghost" id="themeToggle" type="button">Mode: Light</button>
+    </div>
+  </header>
 
-      <div class="grid-card disabled">
-        <div class="card-body">
-          <p class="card-label">Coming Soon</p>
-          <h2 class="card-title">Super Nintendo</h2>
-          <p class="card-copy">SNES and Mode 7 vibes arrive next.</p>
-        </div>
-        <div class="card-actions">
-          <button class="btn ghost" type="button" disabled>Stand By</button>
-        </div>
+  <section class="summary">
+    <div>
+      <h1 class="title">Chon he may de bat gia lap</h1>
+    </div>
+    <div class="stats">
+      <div class="stat">
+        <span class="stat-label">San sang</span>
+        <strong class="stat-value">NES</strong>
       </div>
+      <div class="stat">
+        <span class="stat-label">Dang chuan bi</span>
+        <strong class="stat-value">SNES, GBA</strong>
+      </div>
+    </div>
+  </section>
 
-      <div class="grid-card disabled">
-        <div class="card-body">
-          <p class="card-label">Coming Soon</p>
-          <h2 class="card-title">Sega Genesis</h2>
-          <p class="card-copy">Blast processing queued up.</p>
-        </div>
-        <div class="card-actions">
-          <button class="btn ghost" type="button" disabled>Stand By</button>
-        </div>
+  <section class="grid grid--systems">
+    <article class="card card--light card--active">
+      <div class="card__media">
+        <img src="assets/window/nes-contra.png" alt="Contra NES banner">
       </div>
-    </section>
-  </div>
+      <div class="card__header">
+        <div class="chip chip--online">Dang hoat dong</div>
+        <span class="pill pill--ghost">8-bit</span>
+      </div>
+      <h2 class="card__title">Nintendo (NES)</h2>
+      <div class="tag-row">
+        <span class="tag">.nes</span>
+        <span class="tag">.zip</span>
+        <span class="tag">Virtual gamepad</span>
+      </div>
+      <div class="card__actions">
+        <a class="btn btn--primary" href="nes-player.html">Mo ngay</a>
+        <span class="hint">Chay offline, khong upload len server.</span>
+      </div>
+    </article>
+
+    <article class="card card--light card--disabled">
+      <div class="card__header">
+        <div class="chip">Sap ra mat</div>
+        <span class="pill pill--ghost">16-bit</span>
+      </div>
+      <h2 class="card__title">Super Nintendo (SNES)</h2>
+      <div class="tag-row">
+        <span class="tag">Save state</span>
+        <span class="tag">Cheat</span>
+      </div>
+      <div class="card__actions">
+        <button class="btn" disabled>Dang chuan bi</button>
+      </div>
+    </article>
+
+    <article class="card card--light card--disabled">
+      <div class="card__header">
+        <div class="chip">Sap ra mat</div>
+        <span class="pill pill--ghost">Handheld</span>
+      </div>
+      <h2 class="card__title">Game Boy Advance</h2>
+      <div class="tag-row">
+        <span class="tag">GBA</span>
+        <span class="tag">Cheat</span>
+      </div>
+      <div class="card__actions">
+        <button class="btn" disabled>Dang chuan bi</button>
+      </div>
+    </article>
+  </section>
+
+  <script>
+    (() => {
+      const toggle = document.getElementById("themeToggle");
+      const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const saved = localStorage.getItem("theme");
+      const startDark = saved ? saved === "dark" : prefersDark;
+      const apply = (dark) => {
+        document.body.classList.toggle("dark", dark);
+        if (toggle) toggle.textContent = `Mode: ${dark ? "Dark" : "Light"}`;
+        localStorage.setItem("theme", dark ? "dark" : "light");
+      };
+      apply(startDark);
+      if (toggle) {
+        toggle.addEventListener("click", () => apply(!document.body.classList.contains("dark")));
+      }
+    })();
+  </script>
 </body>
 </html>
