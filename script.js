@@ -3,6 +3,9 @@
   const CORE = (body?.dataset.core || "nes").toLowerCase();
   const GAME_LABEL = body?.dataset.label || CORE.toUpperCase();
   const MYRIENT_DIR = body?.dataset.myrient || "";
+  const NETPLAY_SERVER = body?.dataset.netplayServer || "";
+  const NETPLAY_GAME_ID = body?.dataset.netplayGameid || "";
+  const NETPLAY_ICE = body?.dataset.netplayIce || "";
   const exts = (body?.dataset.exts || "nes,zip")
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -106,6 +109,23 @@
     window.EJS_MenuDisableFullscreen = true;
     window.EJS_virtualGamepad = true;
     window.EJS_controlScheme = CORE;
+    // Optional netplay
+    if (NETPLAY_SERVER) {
+      window.EJS_netplayServer = NETPLAY_SERVER;
+      window.EJS_gameID = Number(NETPLAY_GAME_ID) || 1;
+      try {
+        window.EJS_netplayICEServers = NETPLAY_ICE ? JSON.parse(NETPLAY_ICE) : [
+          { urls: "stun:stun.l.google.com:19302" },
+          { urls: "stun:stun1.l.google.com:19302" },
+          { urls: "stun:stun2.l.google.com:19302" },
+          { urls: "stun:stun.nextcloud.com:3478" },
+          { urls: "turn:openrelay.metered.ca:80", username: "openrelayproject", credential: "openrelayproject" },
+          { urls: "turn:openrelay.metered.ca:443", username: "openrelayproject", credential: "openrelayproject" },
+        ];
+      } catch (e) {
+        console.warn("Invalid NETPLAY_ICE json, using defaults", e);
+      }
+    }
     const isPsx = CORE === "psx" || CORE === "ps1" || CORE === "psx-fast";
     const padSettings = {
       layout: "extended",
