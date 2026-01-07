@@ -584,6 +584,18 @@ body.dark .pill--ghost {
   align-items: center;
 }
 
+@media (max-width: 520px) {
+  .inline-select {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+  .inline-select .btn,
+  .inline-select select.input,
+  .inline-select .input {
+    width: 100%;
+  }
+}
+
 select.input {
   appearance: none;
   -webkit-appearance: none;

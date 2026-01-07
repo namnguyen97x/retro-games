@@ -22,6 +22,7 @@
   const loadMyrientBtn = document.getElementById("loadMyrientBtn");
   const myrientStatus = document.getElementById("myrientStatus");
   const myrientField = document.getElementById("myrientField");
+  const myrientSearch = document.getElementById("myrientSearch");
   const overlayStatus = document.getElementById("overlayStatus");
   const frame = document.querySelector(".frame");
   let currentObjectUrl = null;
@@ -34,6 +35,7 @@
   ];
   let jszipReady = null;
   let myrientList = [];
+  let myrientFiltered = [];
 
   if (romFile && romExts.length) {
     romFile.setAttribute(
@@ -104,7 +106,23 @@
     window.EJS_MenuDisableFullscreen = true;
     window.EJS_virtualGamepad = true;
     window.EJS_controlScheme = CORE;
-    window.EJS_VirtualGamepadSettings = window.EJS_VirtualGamepadSettings || {};
+    const isPsx = CORE === "psx" || CORE === "ps1" || CORE === "psx-fast";
+    const padSettings = {
+      layout: isPsx ? "psx" : "extended",
+      mode: isPsx ? "psx" : CORE,
+      type: isPsx ? "psx" : CORE,
+      forceVisible: true,
+      buttons: isPsx
+        ? ["l1", "r1", "l2", "r2"]
+        : CORE === "snes"
+          ? ["l1", "r1"]
+          : [],
+    };
+    if (isPsx) {
+      window.EJS_PSX_FORCE_DUALSHOCK = true;
+      window.EJS_virtualGamepadMode = "psx";
+    }
+    window.EJS_VirtualGamepadSettings = padSettings;
     window.EJS_ready = () => {
       hideInternalFullscreen();
       setTimeout(hideInternalFullscreen, 300);
@@ -299,32 +317,39 @@
       const seen = new Set();
       const rawList = [];
 
-      for (const m of found) {
+      found.forEach((m) => {
         const name = m[1];
-        if (!name || name.endsWith("/")) continue;
-        if (seen.has(name)) continue;
+        if (!name || name.endsWith("/")) return;
+        if (seen.has(name)) return;
         seen.add(name);
         const decoded = decodeURIComponent(name);
         rawList.push({
+          id: rawList.length,
           title: decoded.replace(/_/g, " "),
           url: new URL(name, MYRIENT_DIR).href,
         });
-      }
+      });
 
       myrientList = rawList.filter((item) => !/^\[?\s*BIOS\]?/i.test(item.title));
       myrientList.sort((a, b) => a.title.localeCompare(b.title));
+      myrientFiltered = [...myrientList];
 
       if (!myrientList.length) throw new Error(`Khong tim thay file .${primaryExt}/.zip hop le`);
 
       if (myrientSelect) {
         myrientSelect.innerHTML = "";
-        myrientList.forEach((item, idx) => {
+        myrientFiltered.forEach((item) => {
           const opt = document.createElement("option");
-          opt.value = String(idx);
+          opt.value = String(item.id);
           opt.textContent = item.title;
           myrientSelect.appendChild(opt);
         });
         myrientSelect.disabled = false;
+      }
+
+      if (myrientSearch) {
+        myrientSearch.value = "";
+        myrientSearch.disabled = false;
       }
 
       if (loadMyrientBtn) loadMyrientBtn.disabled = false;
@@ -344,8 +369,8 @@
 
   function loadSelectedMyrient() {
     if (!myrientSelect || !myrientList.length) return;
-    const idx = Number(myrientSelect.value);
-    const item = myrientList[idx];
+    const id = Number(myrientSelect.value);
+    const item = myrientList.find((it) => it.id === id) || myrientList[id];
     if (!item) {
       setStatus("Chua chon game Myrient.");
       return;
@@ -394,6 +419,24 @@
     myrientSelect.addEventListener("change", () => {
       if (loadMyrientBtn && !myrientList.length) return;
       if (loadMyrientBtn) loadMyrientBtn.disabled = false;
+    });
+  if (myrientSearch)
+    myrientSearch.addEventListener("input", (e) => {
+      const q = (e.target.value || "").toLowerCase();
+      myrientFiltered = myrientList.filter((item) =>
+        item.title.toLowerCase().includes(q)
+      );
+      if (myrientSelect) {
+        myrientSelect.innerHTML = "";
+        myrientFiltered.forEach((item) => {
+          const opt = document.createElement("option");
+          opt.value = String(item.id);
+          opt.textContent = item.title;
+          myrientSelect.appendChild(opt);
+        });
+        myrientSelect.disabled = !myrientFiltered.length;
+      }
+      if (loadMyrientBtn) loadMyrientBtn.disabled = !myrientFiltered.length;
     });
 
   if (!MYRIENT_DIR && myrientField) {
