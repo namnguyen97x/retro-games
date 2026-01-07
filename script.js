@@ -1,16 +1,27 @@
-﻿(() => {
+(() => {
+  const body = document.body;
+  const CORE = (body?.dataset.core || "nes").toLowerCase();
+  const GAME_LABEL = body?.dataset.label || CORE.toUpperCase();
+  const MYRIENT_DIR = body?.dataset.myrient || "";
+  const exts = (body?.dataset.exts || "nes,zip")
+    .split(",")
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const romExts = exts.filter((e) => e !== "zip");
+  const primaryExt = romExts[0] || "nes";
+  const allExtPattern = [...romExts, "zip"].join("|");
+
   const gameHost = document.getElementById("game");
   const statusLine = document.getElementById("statusLine");
   const romFile = document.getElementById("romFile");
   const romUrl = document.getElementById("romUrl");
   const loadBtn = document.getElementById("loadBtn");
   const clearBtn = document.getElementById("clearBtn");
-  const fullscreenBtn = null;
-  const fullscreenFab = null;
   const fetchMyrientBtn = document.getElementById("fetchMyrientBtn");
   const myrientSelect = document.getElementById("myrientSelect");
   const loadMyrientBtn = document.getElementById("loadMyrientBtn");
   const myrientStatus = document.getElementById("myrientStatus");
+  const myrientField = document.getElementById("myrientField");
   const overlayStatus = document.getElementById("overlayStatus");
   const frame = document.querySelector(".frame");
   let currentObjectUrl = null;
@@ -23,8 +34,13 @@
   ];
   let jszipReady = null;
   let myrientList = [];
-  const MYRIENT_DIR =
-    "https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20(Headered)/";
+
+  if (romFile && romExts.length) {
+    romFile.setAttribute(
+      "accept",
+      romExts.map((e) => `.${e}`).join(",") + ",application/zip,.zip"
+    );
+  }
 
   function setStatus(text) {
     if (statusLine) statusLine.textContent = text || "";
@@ -81,18 +97,18 @@
     setStatus("Dang nap game...");
 
     window.EJS_player = "#game";
-    window.EJS_core = "nes";
+    window.EJS_core = CORE;
     window.EJS_gameUrl = gameUrl;
     window.EJS_pathtodata = DATA_PATHS[0];
     window.EJS_startOnLoaded = true;
-    window.EJS_MenuDisableFullscreen = true; // dùng nút fullscreen riêng bên ngoài, tránh xung đột
-    window.EJS_virtualGamepad = true; // auto enable virtual pad on touch devices
-    window.EJS_controlScheme = "nes";
+    window.EJS_MenuDisableFullscreen = true;
+    window.EJS_virtualGamepad = true;
+    window.EJS_controlScheme = CORE;
     window.EJS_VirtualGamepadSettings = window.EJS_VirtualGamepadSettings || {};
     window.EJS_ready = () => {
       hideInternalFullscreen();
       setTimeout(hideInternalFullscreen, 300);
-      setStatus(`Da nap: ${label || "ROM NES"}`);
+      setStatus(`Da nap: ${label || `ROM ${GAME_LABEL}`}`);
     };
 
     const tryPaths = [...DATA_PATHS];
@@ -118,11 +134,18 @@
     loadNext();
   }
 
+  function pickZipEntry(zip) {
+    const names = Object.keys(zip.files);
+    const target = names.find((name) =>
+      romExts.some((ext) => name.toLowerCase().endsWith(`.${ext}`))
+    );
+    return target;
+  }
+
   function handleLoad() {
     const urlValue = (romUrl?.value || "").trim();
     const file = romFile?.files?.[0];
 
-    // Always stop current game immediately.
     resetContainer();
     setStatus("Dang chuan bi nap ROM...");
 
@@ -137,17 +160,15 @@
             if (!buffer) throw new Error("Khong doc duoc file ZIP.");
             await ensureZipLib();
             const zip = await JSZip.loadAsync(buffer);
-            const nesEntry = Object.keys(zip.files).find((name) =>
-              name.toLowerCase().endsWith(".nes")
-            );
-            if (!nesEntry) throw new Error("ZIP khong co file .nes");
-            const nesBuffer = await zip.files[nesEntry].async("arraybuffer");
-            const blob = new Blob([nesBuffer], {
+            const entry = pickZipEntry(zip);
+            if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
+            const romBuffer = await zip.files[entry].async("arraybuffer");
+            const blob = new Blob([romBuffer], {
               type: "application/octet-stream",
             });
             releaseCurrentObjectUrl();
             currentObjectUrl = URL.createObjectURL(blob);
-            injectEmulator(currentObjectUrl, nesEntry);
+            injectEmulator(currentObjectUrl, entry);
           } catch (err) {
             console.error(err);
             setStatus("Giai nen that bai: " + err.message);
@@ -233,7 +254,25 @@
       try {
         const res = await fetch(target);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        return await res.arrayBuffer();
+        const reader = res.body?.getReader();
+        if (!reader) return await res.arrayBuffer();
+        const contentLength = Number(res.headers.get("Content-Length")) || 0;
+        let received = 0;
+        const chunks = [];
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.byteLength;
+          if (contentLength) {
+            const percent = Math.min(100, Math.round((received / contentLength) * 100));
+            setStatus(`Dang tai ROM... ${percent}% (${(received / 1048576).toFixed(2)} MB)`);
+          } else {
+            setStatus(`Dang tai ROM... ${(received / 1048576).toFixed(2)} MB`);
+          }
+        }
+        const blob = new Blob(chunks, { type: "application/octet-stream" });
+        return await blob.arrayBuffer();
       } catch (err) {
         lastErr = err;
       }
@@ -242,6 +281,10 @@
   }
 
   async function fetchMyrientList() {
+    if (!MYRIENT_DIR) {
+      if (myrientStatus) myrientStatus.textContent = "Thu vien nay da tat.";
+      return;
+    }
     if (fetchMyrientBtn) fetchMyrientBtn.disabled = true;
     if (loadMyrientBtn) loadMyrientBtn.disabled = true;
     if (myrientSelect) {
@@ -252,7 +295,7 @@
     setStatus("Dang tai danh sach tu Myrient...");
     try {
       const html = await fetchTextWithFallback(MYRIENT_DIR);
-      const found = [...html.matchAll(/href=\"([^\"]+\.(?:nes|zip))\"/gi)];
+      const found = [...html.matchAll(new RegExp(`href="([^"]+\\.(?:${allExtPattern}))"`, "gi"))];
       const seen = new Set();
       const rawList = [];
 
@@ -268,13 +311,10 @@
         });
       }
 
-      myrientList = rawList.filter(
-        (item) => !/^\[?\s*BIOS\]?/i.test(item.title)
-      );
+      myrientList = rawList.filter((item) => !/^\[?\s*BIOS\]?/i.test(item.title));
       myrientList.sort((a, b) => a.title.localeCompare(b.title));
 
-      if (!myrientList.length)
-        throw new Error("Khong tim thay file .nes/.zip hop le");
+      if (!myrientList.length) throw new Error(`Khong tim thay file .${primaryExt}/.zip hop le`);
 
       if (myrientSelect) {
         myrientSelect.innerHTML = "";
@@ -319,30 +359,28 @@
         const buffer = await fetchBinaryWithFallback(item.url);
         const ext = (item.url.split(".").pop() || "").toLowerCase();
 
-          if (ext === "zip") {
-            await ensureZipLib();
-            const zip = await JSZip.loadAsync(buffer);
-            const nesEntry = Object.keys(zip.files).find((name) =>
-              name.toLowerCase().endsWith(".nes")
-            );
-            if (!nesEntry) throw new Error("ZIP khong co file .nes");
-            const nesBuffer = await zip.files[nesEntry].async("arraybuffer");
-            const blob = new Blob([nesBuffer], {
-              type: "application/octet-stream",
-            });
-            releaseCurrentObjectUrl();
-            currentObjectUrl = URL.createObjectURL(blob);
-            injectEmulator(currentObjectUrl, item.title);
-          } else {
-            const blob = new Blob([buffer], {
-              type: "application/octet-stream",
-            });
-            releaseCurrentObjectUrl();
-            currentObjectUrl = URL.createObjectURL(blob);
-            injectEmulator(currentObjectUrl, item.title);
-          }
-        } catch (err) {
-          console.error(err);
+        if (ext === "zip") {
+          await ensureZipLib();
+          const zip = await JSZip.loadAsync(buffer);
+          const entry = pickZipEntry(zip);
+          if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
+          const romBuffer = await zip.files[entry].async("arraybuffer");
+          const blob = new Blob([romBuffer], {
+            type: "application/octet-stream",
+          });
+          releaseCurrentObjectUrl();
+          currentObjectUrl = URL.createObjectURL(blob);
+          injectEmulator(currentObjectUrl, item.title);
+        } else {
+          const blob = new Blob([buffer], {
+            type: "application/octet-stream",
+          });
+          releaseCurrentObjectUrl();
+          currentObjectUrl = URL.createObjectURL(blob);
+          injectEmulator(currentObjectUrl, item.title);
+        }
+      } catch (err) {
+        console.error(err);
         setStatus("Khong tai duoc ROM: " + (err?.message || err));
       } finally {
         if (loadMyrientBtn) loadMyrientBtn.disabled = false;
@@ -358,7 +396,7 @@
       if (loadMyrientBtn) loadMyrientBtn.disabled = false;
     });
 
-  // Fullscreen handled inside EmulatorJS; external buttons removed
+  if (!MYRIENT_DIR && myrientField) {
+    myrientField.style.display = "none";
+  }
 })();
-
-

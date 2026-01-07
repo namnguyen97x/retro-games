@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NES | EmulatorJS Player</title>
+  <title>PS1 | EmulatorJS Player</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="page page--player" data-core="nes" data-label="NES" data-exts="nes,zip" data-myrient="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Nintendo%20Entertainment%20System%20(Headered)/">
+<body class="page page--player" data-core="psx" data-label="PS1" data-exts="bin,cue,iso,img,chd,zip" data-myrient="https://myrient.erista.me/files/Redump/Sony%20-%20PlayStation/">
   <div class="topbar">
     <div class="brand"></div>
     <div class="topbar__actions">
@@ -25,9 +25,9 @@
         <div id="game" aria-live="polite"></div>
       </div>
       <ul class="tips">
-        <li>Nhan menu noi (ba gach) trong khung EmulatorJS de vao Settings &gt; Controls (remap P1/P2) hoac Cheats.</li>
-        <li>Phim mac dinh: mui ten di chuyen, Z/A, X/B, Enter/Start, Shift/Select. Gamepad vat ly duoc nhan tu dong.</li>
-        <li>Neu can tai ROM khac, chon file/URL va bam "Nap ROM NES".</li>
+        <li>Nhac: nhan menu noi (ba gach) trong khung EmulatorJS de vao Settings &gt; Controls hoac Cheats.</li>
+        <li>Phim mac dinh: mui ten di chuyen, X/Circle/□/△, L1/R1/L2/R2, Start/Select.</li>
+        <li>Neu can tai ROM khac, chon file/URL va bam "Nap ROM PS1".</li>
       </ul>
     </section>
 
@@ -35,24 +35,24 @@
       <h2>Nap ROM</h2>
       <div class="controls">
         <div class="field">
-          <label for="romFile">Upload ROM (.nes hoac .zip)</label>
-          <input class="input" type="file" id="romFile" accept=".nes,.zip,application/zip">
+          <label for="romFile">Upload ROM (.bin/.cue/.iso/.img/.chd hoac .zip)</label>
+          <input class="input" type="file" id="romFile" accept=".bin,.cue,.iso,.img,.chd,.zip,application/zip">
           <p class="hint">File chi chay cuc bo, khong tai len server.</p>
         </div>
 
         <div class="field">
           <label for="romUrl">Hoac dan URL ROM truc tiep</label>
-          <input class="input" type="url" id="romUrl" placeholder="https://.../game.nes hoac .zip">
+          <input class="input" type="url" id="romUrl" placeholder="https://.../game.bin hoac .zip">
           <p class="hint">Neu bi chan CORS, hay tai ve va dung upload.</p>
         </div>
 
         <div class="toolbar">
-          <button class="btn btn--primary" id="loadBtn">Nap ROM NES</button>
+          <button class="btn btn--primary" id="loadBtn">Nap ROM PS1</button>
           <button class="btn" id="clearBtn">Xoa cau hinh</button>
         </div>
 
         <div class="field" id="myrientField">
-          <label>Thu vien Myrient (NES)</label>
+          <label>Thu vien Myrient (PS1)</label>
           <div class="inline-select">
             <button class="btn" id="fetchMyrientBtn" type="button">Lay danh sach</button>
             <select class="input" id="myrientSelect" disabled>
@@ -65,7 +65,7 @@
 
         <div class="field">
           <label>Meo thao tac</label>
-          <p class="hint">Esc hoac icon menu trong khung EmulatorJS de mo Quick Menu. O do co Cheats, Save/Load state, chinh phim P1/P2, bat phim ao.</p>
+          <p class="hint">Esc hoac icon menu trong khung EmulatorJS de mo Quick Menu. O do co Cheats, Save/Load state, chinh phim, bat phim ao.</p>
         </div>
       </div>
     </aside>
