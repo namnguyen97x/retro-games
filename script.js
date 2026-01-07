@@ -137,36 +137,41 @@
 
     // Custom PSX layout to avoid overlapping buttons on mobile
     const psxCustomPad = [
-      // D-pad (smaller, higher)
+      // D-pad (scaled down, lifted a bit)
       {
         type: "dpad",
         location: "left",
-        left: "10%",
-        top: "60%",
+        left: "8%",
+        top: "55%",
         joystickInput: false,
         inputValues: [4, 5, 6, 7],
-        size: 0.22,
+        size: 0.2,
       },
       // Shoulders
-      { type: "button", text: "L1", id: "l1", location: "top", left: 12, top: 46, block: true, input_value: 10 },
-      { type: "button", text: "L2", id: "l2", location: "top", left: 12, top: 78, block: true, input_value: 12 },
-      { type: "button", text: "R1", id: "r1", location: "top", right: 12, top: 46, block: true, input_value: 11 },
-      { type: "button", text: "R2", id: "r2", location: "top", right: 12, top: 78, block: true, input_value: 13 },
-      // Face buttons (diamond, shifted down)
-      { type: "button", text: "Y", id: "y", location: "right", left: 20, top: 60, bold: true, input_value: 9 },
-      { type: "button", text: "X", id: "x", location: "right", left: -30, top: 100, bold: true, input_value: 1 },
-      { type: "button", text: "B", id: "b", location: "right", left: 70, top: 100, bold: true, input_value: 8 },
-      { type: "button", text: "A", id: "a", location: "right", left: 20, top: 140, bold: true, input_value: 0 },
-      // Start / Select
-      { type: "button", text: "Select", id: "select", location: "center", left: -20, top: 140, fontSize: 14, block: true, input_value: 2 },
-      { type: "button", text: "Start", id: "start", location: "center", left: 60, top: 140, fontSize: 14, block: true, input_value: 3 },
+      { type: "button", text: "L1", id: "l1", location: "top", left: 12, top: 28, block: true, input_value: 10 },
+      { type: "button", text: "L2", id: "l2", location: "top", left: 12, top: 62, block: true, input_value: 12 },
+      { type: "button", text: "R1", id: "r1", location: "top", right: 12, top: 28, block: true, input_value: 11 },
+      { type: "button", text: "R2", id: "r2", location: "top", right: 12, top: 62, block: true, input_value: 13 },
+      // Face buttons (diamond, slightly tighter)
+      { type: "button", text: "Y", id: "y", location: "right", left: 14, top: 56, bold: true, input_value: 9 },
+      { type: "button", text: "X", id: "x", location: "right", left: -34, top: 92, bold: true, input_value: 1 },
+      { type: "button", text: "B", id: "b", location: "right", left: 62, top: 92, bold: true, input_value: 8 },
+      { type: "button", text: "A", id: "a", location: "right", left: 14, top: 128, bold: true, input_value: 0 },
+      // Start / Select (centered block)
+      { type: "button", text: "Select", id: "select", location: "center", left: -48, top: 96, fontSize: 14, block: true, input_value: 2 },
+      { type: "button", text: "Start", id: "start", location: "center", left: 48, top: 96, fontSize: 14, block: true, input_value: 3 },
     ];
+    const hasExternalPsxPad = isPsx && Array.isArray(window.EJS_VirtualGamepadSettings);
     if (isPsx) {
       window.EJS_PSX_FORCE_DUALSHOCK = true;
-      // Use custom virtual pad layout so positions/sizes below take effect
+      // Force custom layout mode so external or fallback pads take effect
       window.EJS_virtualGamepadMode = "custom";
     }
-    window.EJS_VirtualGamepadSettings = isPsx ? psxCustomPad : padSettings;
+    window.EJS_VirtualGamepadSettings = hasExternalPsxPad
+      ? window.EJS_VirtualGamepadSettings
+      : isPsx
+      ? psxCustomPad
+      : padSettings;
     window.EJS_ready = () => {
       hideInternalFullscreen();
       setTimeout(hideInternalFullscreen, 300);
