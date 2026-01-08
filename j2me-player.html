@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>J2ME | FreeJ2ME Launcher</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="page page--player page--j2me">
+  <div class="topbar">
+    <div class="nav-left">
+      <div class="logo-mark">J2</div>
+      <div>
+        <p class="eyebrow" style="margin:0">Java Mobile</p>
+        <strong class="logo-title">FreeJ2ME</strong>
+      </div>
+    </div>
+    <div class="topbar__actions">
+      <a class="btn" href="index.html">&lt;- Ve trang chinh</a>
+      <a class="btn btn--primary" href="freej2me-web/web/run.html" target="_blank" rel="noopener">Mo run.html</a>
+    </div>
+  </div>
+
+  <section class="panel j2me-hero">
+    <div>
+      <p class="eyebrow">CheerpJ + FreeJ2ME</p>
+      <h1 class="title">Trinh gia lap J2ME ngay trong trinh duyet</h1>
+      <p class="lede">Upload file .jar/.jad, tinh chinh kich thuoc man hinh, luu du lieu cuc bo va chia se nhanh game Java Mobile.</p>
+    </div>
+    <div class="pill pill--ghost">Ho tro desktop &amp; mobile</div>
+  </section>
+
+  <div class="player-layout player-layout--j2me">
+    <section class="panel j2me-shell">
+      <div class="frame frame--glass frame--j2me">
+        <iframe class="j2me-iframe" src="freej2me-web/web/index.html" title="Launcher FreeJ2ME" loading="lazy" allow="fullscreen; autoplay; clipboard-read; clipboard-write"></iframe>
+      </div>
+      <p class="hint">Launcher nam trong khung tren. Neu muon toan man hinh, bam nut fullscreen cua trinh duyet hoac mo run.html o tab moi.</p>
+    </section>
+
+    <aside class="panel j2me-guides">
+      <h2>Huong dan nhanh</h2>
+      <ol class="step-list">
+        <li><strong>Upload .jar</strong>: Bam "Select JAR file" va (neu can) them file JAD.</li>
+        <li><strong>Tinh chinh</strong>: Chon do phan giai, font, phone type, bat/tat am thanh hoac 3D.</li>
+        <li><strong>Luu &amp; chia se</strong>: "Export Data" tao goi zip; dat file app_id.zip vao thu muc <code>freej2me-web/web/apps</code> de nap nhanh.</li>
+        <li><strong>Chay game</strong>: Bam ten game trong danh sach, hoac truy cap <code>freej2me-web/web/run.html?app=ID</code>.</li>
+      </ol>
+      <div class="tip-card">
+        <h3>Phim tat</h3>
+        <p>Esc mo menu tuy chinh; F1/F2 la phim mem trai/phai; OK la Enter; phim so map nhu dien thoai; pad ao tu bat tren mobile.</p>
+        <p>Dung nut Maximize trong khung choi de doi scale, hoac nut fullscreen cua trinh duyet de choi thoai mai hon.</p>
+      </div>
+      <div class="tip-card">
+        <h3>Meo embed</h3>
+        <p>Sau khi export, tao <code>appid.zip</code> va dat trong thu muc apps. URL mau: <code>freej2me-web/web/run.html?app=appid&amp;fractionScale=1</code>.</p>
+        <p>Neu mo tren di dong, them <code>mobile=1</code> de bat ban phim ao toi uu cam ung.</p>
+      </div>
+      <div class="tip-card">
+        <h3>Game co san</h3>
+        <p>Bam nut duoi de tu cai va mo nhanh.</p>
+        <p><a class="btn btn--primary" href="freej2me-web/web/run.html?app=ninja_school_3" target="_blank" rel="noopener">Mo Ninja School 3</a></p>
+        <p class="hint">Lan dau mo se tu cai tu goi <code>apps/ninja_school_3.zip</code> roi hien trong Installed Games.</p>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    (() => {
+      const prefersDark =
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const savedTheme = localStorage.getItem("theme");
+      const startDark = savedTheme ? savedTheme === "dark" : prefersDark;
+      document.body.classList.toggle("dark", startDark);
+    })();
+  </script>
+</body>
+</html>

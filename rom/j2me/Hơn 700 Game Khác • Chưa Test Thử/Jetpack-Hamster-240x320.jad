@@ -1,0 +1,22 @@
+Manifest-Version: 1.0
+MIDlet-Vendor: Thanhdaik
+ALW-Version: 1.38
+MIDlet-Version: 1.0.0
+JAD-Version: 1.17
+Created-By: Metaflow
+MIDlet-Data-Size: 1024
+MIDlet-Name: Jetpack Hamster
+MIDlet-1: Jetpack Hamster, /icon.png, baltorogames.system.Jpack
+
+MicroEdition-Configuration: CLDC-1.1
+MIDlet-Icon: /icon.png
+MIDlet-Permissions: javax.microedition.io.Connector.http,javax.microed
+ ition.io.Connector.https,javax.microedition.io.Connector.sms,javax.wi
+ reless.messaging.sms.send,javax.wireless.messaging.sms.receive
+MicroEdition-Profile: MIDP-2.0
+MIDlet-Delete-Confirm: GameHub.Pro - Tai Game Java Hack !
+MIDlet-Description: http://gamehub.pro
+MIDlet-Info-URL: http://gamehub.pro
+
+MIDlet-Jar-Size: 387444
+MIDlet-Jar-URL: http://gamehub.pro/files/blogs/01-2015/Jetpack-Hamster-240x320.jar

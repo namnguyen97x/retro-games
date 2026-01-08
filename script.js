@@ -6,6 +6,8 @@
   const NETPLAY_SERVER = body?.dataset.netplayServer || "";
   const NETPLAY_GAME_ID = body?.dataset.netplayGameid || "";
   const NETPLAY_ICE = body?.dataset.netplayIce || "";
+  const ZIP_MODE = (body?.dataset.zipMode || "extract").toLowerCase();
+  const zipPassthrough = ZIP_MODE === "pass";
   const exts = (body?.dataset.exts || "nes,zip")
     .split(",")
     .map((s) => s.trim().toLowerCase())
@@ -83,6 +85,17 @@
     });
   }
 
+  function guessGameName(input) {
+    if (!input) return "";
+    const fromUrl = input.split("/").pop() || input;
+    const clean = fromUrl.split("#")[0].split("?")[0];
+    const parts = clean.split(".");
+    if (parts.length > 1) {
+      parts.pop();
+    }
+    return parts.join(".") || clean;
+  }
+
   function stopEmulator() {
     try {
       if (window.EJS_emulator?.stop) {
@@ -103,6 +116,7 @@
     }
   }
 
+
   function resetContainer() {
     stopEmulator();
     if (gameHost) gameHost.innerHTML = "";
@@ -110,7 +124,7 @@
     if (existing) existing.remove();
   }
 
-  function injectEmulator(gameUrl, label) {
+  function injectEmulator(gameUrl, label, parentUrlForCore) {
     if (!gameUrl) {
       setStatus("Chua co ROM de nap.");
       return;
@@ -122,6 +136,19 @@
     window.EJS_player = "#game";
     window.EJS_core = CORE;
     window.EJS_gameUrl = gameUrl;
+    const fileLabel = label || `${GAME_LABEL}.zip`;
+    const gameName = guessGameName(fileLabel);
+    if (fileLabel) {
+      window.EJS_gameUrlName = fileLabel;
+    }
+    if (gameName) {
+      window.EJS_gameName = gameName;
+    }
+    if (parentUrlForCore) {
+      window.EJS_gameParentUrl = parentUrlForCore;
+    } else {
+      delete window.EJS_gameParentUrl;
+    }
     window.EJS_pathtodata = DATA_PATHS[0];
     window.EJS_startOnLoaded = true;
     window.EJS_MenuDisableFullscreen = true;
@@ -261,6 +288,66 @@
     return target;
   }
 
+  async function buildUrlFromZip(buffer, fallbackLabel, extraBuffers = []) {
+    const mustMerge = extraBuffers.length > 0;
+    if (zipPassthrough && !mustMerge) {
+      const blob = new Blob([buffer], { type: "application/zip" });
+      releaseCurrentObjectUrl();
+      currentObjectUrl = URL.createObjectURL(blob);
+      return { url: currentObjectUrl, label: fallbackLabel };
+    }
+
+    await ensureZipLib();
+    const merged = new JSZip();
+
+    // Additional layers first so the main game can override if needed.
+    for (const buf of extraBuffers) {
+      if (!buf) continue;
+      try {
+        const z = await JSZip.loadAsync(buf);
+        for (const name of Object.keys(z.files)) {
+          const file = z.files[name];
+          if (file.dir) continue;
+          if (!merged.file(name)) {
+            const data = await file.async("arraybuffer");
+            merged.file(name, data);
+          }
+        }
+      } catch (err) {
+        console.warn("Khong doc duoc zip phu", err);
+      }
+    }
+
+    const zip = await JSZip.loadAsync(buffer);
+    const entry = pickZipEntry(zip);
+    if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
+    for (const name of Object.keys(zip.files)) {
+      const file = zip.files[name];
+      if (file.dir) continue;
+      const data = await file.async("arraybuffer");
+      merged.file(name, data);
+    }
+
+    const blob = await merged.generateAsync({ type: "blob" });
+    releaseCurrentObjectUrl();
+    currentObjectUrl = URL.createObjectURL(blob);
+    return { url: currentObjectUrl, label: entry };
+  }
+
+  function readFileBuffer(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const buf = e.target?.result;
+        if (!buf) return reject(new Error("Khong doc duoc file"));
+        resolve(buf);
+      };
+      reader.onerror = () => reject(new Error("Khong doc duoc file"));
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+
   function handleLoad() {
     const urlValue = (romUrl?.value || "").trim();
     const file = romFile?.files?.[0];
@@ -270,47 +357,74 @@
 
     if (file) {
       const ext = (file.name.split(".").pop() || "").toLowerCase();
+
       if (ext === "zip") {
-        setStatus("Dang giai nen ZIP...");
-        const reader = new FileReader();
-        reader.onload = async (e) => {
+        (async () => {
           try {
-            const buffer = e.target?.result;
-            if (!buffer) throw new Error("Khong doc duoc file ZIP.");
-            await ensureZipLib();
-            const zip = await JSZip.loadAsync(buffer);
-            const entry = pickZipEntry(zip);
-            if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
-            const romBuffer = await zip.files[entry].async("arraybuffer");
-            const blob = new Blob([romBuffer], {
-              type: "application/octet-stream",
-            });
-            releaseCurrentObjectUrl();
-            currentObjectUrl = URL.createObjectURL(blob);
-            injectEmulator(currentObjectUrl, entry);
+            setStatus("Dang chuan bi ROM zip...");
+            const buffer = await readFileBuffer(file);
+            const parentBuffers = [];
+
+            const { url, label } = await buildUrlFromZip(
+              buffer,
+              file.name,
+              parentBuffers
+            );
+            injectEmulator(
+              url,
+              label || file.name,
+              ""
+            );
           } catch (err) {
             console.error(err);
             setStatus("Giai nen that bai: " + err.message);
           }
-        };
-        reader.onerror = () => setStatus("Khong doc duoc file ZIP.");
-        reader.readAsArrayBuffer(file);
+        })();
       } else {
         releaseCurrentObjectUrl();
         currentObjectUrl = URL.createObjectURL(file);
-        injectEmulator(currentObjectUrl, file.name);
+        injectEmulator(currentObjectUrl, file.name, "");
       }
       return;
     }
 
     if (urlValue) {
-      releaseCurrentObjectUrl();
-      injectEmulator(urlValue, urlValue);
-      saveLastSession({
-        label: urlValue,
-        url: urlValue,
-        source: "url",
-      });
+      const ext = (urlValue.split(".").pop() || "").toLowerCase();
+      if (ext === "zip") {
+        (async () => {
+          try {
+            setStatus("Dang tai ZIP tu URL...");
+            const buffer = await fetchBinaryWithFallback(urlValue);
+            const parentBuffers = [];
+            const { url, label } = await buildUrlFromZip(
+              buffer,
+              urlValue,
+              parentBuffers
+            );
+            injectEmulator(
+              url,
+              label || urlValue,
+              ""
+            );
+            saveLastSession({
+              label: label || urlValue,
+              url: urlValue,
+              source: "url",
+            });
+          } catch (err) {
+            console.error(err);
+            setStatus("Khong tai/gop ZIP: " + err.message);
+          }
+        })();
+      } else {
+        releaseCurrentObjectUrl();
+        injectEmulator(urlValue, urlValue, "");
+        saveLastSession({
+          label: urlValue,
+          url: urlValue,
+          source: "url",
+        });
+      }
       return;
     }
 
@@ -489,26 +603,31 @@
         setStatus("Dang tai ROM tu Myrient...");
         const buffer = await fetchBinaryWithFallback(item.url);
         const ext = (item.url.split(".").pop() || "").toLowerCase();
+        const parentBuffers = [];
 
         if (ext === "zip") {
-          await ensureZipLib();
-          const zip = await JSZip.loadAsync(buffer);
-          const entry = pickZipEntry(zip);
-          if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
-          const romBuffer = await zip.files[entry].async("arraybuffer");
-          const blob = new Blob([romBuffer], {
-            type: "application/octet-stream",
+          const { url, label } = await buildUrlFromZip(
+            buffer,
+            item.title,
+            parentBuffers
+          );
+          injectEmulator(
+            url,
+            label || item.title || item.url,
+            ""
+          );
+          saveLastSession({
+            label: label || item.title,
+            url: item.url,
+            source: "myrient",
           });
-          releaseCurrentObjectUrl();
-          currentObjectUrl = URL.createObjectURL(blob);
-          injectEmulator(currentObjectUrl, item.title);
         } else {
           const blob = new Blob([buffer], {
             type: "application/octet-stream",
           });
           releaseCurrentObjectUrl();
           currentObjectUrl = URL.createObjectURL(blob);
-          injectEmulator(currentObjectUrl, item.title);
+          injectEmulator(currentObjectUrl, item.title, "");
           saveLastSession({
             label: item.title,
             url: item.url,
@@ -577,17 +696,11 @@
           const buffer = await fetchBinaryWithFallback(session.url);
           const ext = (session.url.split(".").pop() || "").toLowerCase();
           if (ext === "zip") {
-            await ensureZipLib();
-            const zip = await JSZip.loadAsync(buffer);
-            const entry = pickZipEntry(zip);
-            if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
-            const romBuffer = await zip.files[entry].async("arraybuffer");
-            const blob = new Blob([romBuffer], {
-              type: "application/octet-stream",
-            });
-            releaseCurrentObjectUrl();
-            currentObjectUrl = URL.createObjectURL(blob);
-            injectEmulator(currentObjectUrl, session.label || entry);
+            const { url, label } = await buildUrlFromZip(
+              buffer,
+              session.label || session.url
+            );
+            injectEmulator(url, label || session.label || session.url);
           } else {
             const blob = new Blob([buffer], {
               type: "application/octet-stream",

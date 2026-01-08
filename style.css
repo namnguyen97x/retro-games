@@ -67,6 +67,9 @@ a {
   margin: 0 auto;
   padding: 22px 18px 80px;
 }
+.page--j2me {
+  width: min(1400px, 100%);
+}
 
 .page--landing {
   display: grid;
@@ -813,9 +816,109 @@ select.input option {
   color: var(--muted);
 }
 
+/* J2ME launcher layout */
+.page--j2me {
+  --text: #e6eef7;
+  --muted: #9fb2d6;
+  --border: rgba(255, 255, 255, 0.16);
+  --chip-bg: rgba(255, 255, 255, 0.12);
+  --tag-bg: rgba(255, 255, 255, 0.14);
+  --accent: #00a7f5;
+  --accent-2: #8b5cf6;
+  background: radial-gradient(150% 120% at 12% 14%, rgba(0, 167, 245, 0.22), transparent 40%),
+    radial-gradient(120% 120% at 82% 0%, rgba(139, 92, 246, 0.25), transparent 36%),
+    #050915;
+  color: var(--text);
+}
+
+.page--j2me .panel {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.55);
+}
+
+.j2me-hero {
+  background: linear-gradient(135deg, rgba(0, 167, 245, 0.38), rgba(79, 70, 229, 0.44));
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  box-shadow: 0 26px 50px rgba(0, 0, 0, 0.55);
+}
+
+.j2me-hero .badge-row {
+  margin: 8px 0 0;
+}
+
+.player-layout--j2me {
+  grid-template-columns: minmax(520px, 2.2fr) minmax(320px, 1fr);
+  align-items: start;
+}
+
+.frame--glass {
+  background: rgba(8, 14, 24, 0.78);
+  backdrop-filter: blur(10px);
+}
+
+.frame--j2me {
+  padding: 0;
+  border-width: 1px;
+}
+
+.j2me-shell .frame {
+  background: radial-gradient(circle at 22% 18%, rgba(0, 167, 245, 0.28), transparent 45%),
+    rgba(0, 0, 0, 0.75);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.j2me-iframe {
+  width: 100%;
+  height: calc(100vh - 180px);
+  min-height: 820px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 16px;
+  background: #050915;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+}
+
+.j2me-guides {
+  display: grid;
+  gap: 12px;
+}
+
+.step-list {
+  margin: 0;
+  padding-left: 18px;
+  display: grid;
+  gap: 8px;
+}
+
+.step-list strong {
+  color: #fff;
+}
+
+.tip-card {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 12px;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.04));
+  box-shadow: 0 18px 32px rgba(0, 0, 0, 0.4);
+}
+
+.tip-card h3 {
+  margin-top: 0;
+  margin-bottom: 6px;
+}
+
 @media (max-width: 960px) {
   .hero,
   .summary {
+    grid-template-columns: 1fr;
+  }
+  .j2me-hero {
     grid-template-columns: 1fr;
   }
   .pill--subtle {
@@ -834,6 +937,10 @@ select.input option {
     height: 78vh;
     min-height: 65vh;
     max-height: 90vh;
+  }
+  .j2me-iframe {
+    height: 82vh;
+    min-height: 680px;
   }
   .virtual-pad {
     flex-direction: column;

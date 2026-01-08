@@ -1564,8 +1564,9 @@ window.EJS_main = function(_0xa88a13, _0x17edbf, _0x2c1832) {
                             _0x3cf3cf = _0x50eb85.gameUrl,
                             _0x594488 = _0x50eb85.system;
                         'vbanext' == _0x594488 && (_0x594488 = 'gba');
-                        var _0x154dc5 = (typeof _0x3cf3cf == 'string') ? _0x3cf3cf.split('/') : "ga.me",
-                            _0x139f1c = _0x154dc5[_0x154dc5.length - 0x1];
+                        var _0x1433ca = _0x50eb85.gameUrlName || _0x50eb85.gameName || null,
+                            _0x154dc5 = (typeof _0x3cf3cf == 'string') ? _0x3cf3cf.split('/') : "ga.me",
+                            _0x139f1c = _0x1433ca || _0x154dc5[_0x154dc5.length - 0x1];
                         _0x139f1c.indexOf('?') > -0x1 && (_0x139f1c = _0x139f1c.substr(0x0, _0x139f1c.indexOf('?')));
                         _0x139f1c.split('.').pop();
                         _0x2c1832.innerHTML = _0xa88a13.localization('Download Game Data');
