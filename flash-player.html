@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flash | Ruffle Player</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+</head>
+<body class="page page--player">
+  <div class="topbar">
+    <div class="brand"></div>
+    <div class="topbar__actions">
+      <a class="btn" href="index.html">&lt;- Ve trang chon he may</a>
+    </div>
+  </div>
+
+  <div class="player-layout">
+    <section class="panel">
+      <h2>Man hinh Flash</h2>
+      <div class="frame" id="playerFrame">
+        <button class="fullscreen-fab" id="flashFullscreen" type="button" aria-label="Fullscreen">⛶</button>
+        <div id="flashContainer" class="flash-container" aria-live="polite"></div>
+        <div class="screen-overlay" id="overlayStatus"></div>
+        <div class="virtual-pad" id="virtualPad" aria-label="Pad ao cho dien thoai">
+          <div class="pad pad--left">
+            <button class="pad__btn pad__btn--up" data-key="ArrowUp" aria-label="Len">▲</button>
+            <div class="pad__btn-row">
+              <button class="pad__btn pad__btn--left" data-key="ArrowLeft" aria-label="Trai">◀</button>
+              <button class="pad__btn pad__btn--center" data-key="Space" aria-label="Giua"></button>
+              <button class="pad__btn pad__btn--right" data-key="ArrowRight" aria-label="Phai">▶</button>
+            </div>
+            <button class="pad__btn pad__btn--down" data-key="ArrowDown" aria-label="Xuong">▼</button>
+          </div>
+          <div class="pad pad--right">
+            <div class="pad__cluster">
+              <button class="pad__btn pad__btn--action" data-key="KeyZ" aria-label="Nut A">A</button>
+              <button class="pad__btn pad__btn--action" data-key="KeyX" aria-label="Nut B">B</button>
+              <button class="pad__btn pad__btn--action" data-key="Enter" aria-label="Start">Start</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="tips">
+        <li>Ho tro file .swf, chay bang Ruffle (khong can Flash Player trinh duyet).</li>
+        <li>Tren PC dung chuot &amp; ban phim; tren dien thoai co pad ao (A/B/Start + mui ten).</li>
+        <li>Neu game khong phan hoi, thu nut A/B hoac Start va kiem tra lai file SWF.</li>
+      </ul>
+    </section>
+
+    <aside class="panel">
+      <h2>Nap game Flash</h2>
+      <div class="controls">
+        <div class="field">
+          <label for="swfFile">Upload file (.swf)</label>
+          <input class="input" type="file" id="swfFile" accept=".swf,application/x-shockwave-flash">
+          <p class="hint">File chi chay cuc bo, khong tai len server.</p>
+        </div>
+
+        <div class="field">
+          <label for="swfUrl">Hoac dan URL SWF truc tiep</label>
+          <input class="input" type="url" id="swfUrl" placeholder="https://.../game.swf">
+          <p class="hint">Neu bi chan CORS, hay tai ve va dung upload.</p>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn btn--primary" id="loadBtn" type="button">Chay game Flash</button>
+          <button class="btn" id="clearBtn" type="button">Xoa cau hinh</button>
+        </div>
+
+        <div class="field">
+          <label>Game co san (local-games/flash)</label>
+          <div class="inline-select">
+            <button class="btn" id="localLoadBtn" type="button">Tai danh sach offline</button>
+            <input class="input" type="text" id="localSearch" placeholder="Tim game..." disabled>
+          </div>
+          <select class="input" id="localSelect" size="8" disabled>
+            <option>Chua tai danh sach</option>
+          </select>
+          <div class="toolbar">
+            <button class="btn btn--primary" id="localPlayBtn" type="button" disabled>Chay game offline</button>
+            <p class="hint" id="localStatus">Chua nap danh sach.</p>
+          </div>
+          <p class="hint">File SWF duoc host san trong folder local-games/flash (cung domain), khong bi CORS.</p>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn" id="togglePad" type="button">Pad ao: tu dong</button>
+          <p class="status" id="statusLine">Chua nap game.</p>
+        </div>
+
+        <div class="field">
+          <label>Meo thao tac</label>
+          <p class="hint">Pad ao se tu bat tren mobile; co the tat/bat bang nut “Pad ao”. Nut A/B mac dinh tuong ung phim Z/X, Start = Enter.</p>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <script type="module" src="flash-player.js"></script>
+</body>
+</html>

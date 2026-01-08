@@ -633,6 +633,111 @@ select.input option {
   opacity: 1;
 }
 
+.flash-container {
+  width: 100%;
+  min-height: 320px;
+  height: 70vh;
+  background: #000;
+}
+
+#playerFrame:fullscreen,
+#playerFrame:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+}
+
+#playerFrame:fullscreen .flash-container,
+#playerFrame:-webkit-full-screen .flash-container {
+  height: 100vh;
+  min-height: 100vh;
+}
+
+#playerFrame:fullscreen ruffle-embed,
+#playerFrame:fullscreen ruffle-player,
+#playerFrame:-webkit-full-screen ruffle-embed,
+#playerFrame:-webkit-full-screen ruffle-player {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.virtual-pad {
+  position: absolute;
+  inset: auto 0 10px 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 8px;
+  gap: 12px;
+  pointer-events: none;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  background: none;
+  border-radius: 12px;
+}
+
+.virtual-pad.is-hidden {
+  display: none;
+}
+
+.pad {
+  display: flex;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.pad--left {
+  flex-direction: column;
+  align-items: center;
+}
+
+.pad--right {
+  align-items: center;
+}
+
+.pad__btn-row {
+  display: flex;
+  gap: 10px;
+}
+
+.pad__cluster {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(54px, 1fr));
+  gap: 10px;
+}
+
+.pad__btn {
+  min-width: 54px;
+  min-height: 54px;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  background: transparent;
+  color: #e8f6ff;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  box-shadow: none;
+  backdrop-filter: none;
+  pointer-events: auto;
+}
+
+.pad__btn--action {
+  background: transparent;
+  border-color: rgba(0, 167, 245, 0.45);
+  color: #fff;
+}
+
+.pad__btn--center {
+  opacity: 0.25;
+  pointer-events: none;
+}
+
+.pad__btn.is-active {
+  transform: translateY(1px);
+  background: rgba(255, 255, 255, 0.2);
+}
+
 .status {
   color: var(--muted);
   margin: 0;
@@ -685,6 +790,19 @@ select.input option {
     height: 78vh;
     min-height: 65vh;
     max-height: 90vh;
+  }
+  .virtual-pad {
+    flex-direction: column;
+    align-items: center;
+  }
+  .pad__cluster {
+    grid-template-columns: repeat(3, minmax(48px, 1fr));
+  }
+  .pad__btn {
+    min-width: 48px;
+    min-height: 48px;
+    border-radius: 10px;
+    border-width: 1px;
   }
 }
 

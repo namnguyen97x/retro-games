@@ -11,7 +11,7 @@
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
   const romExts = exts.filter((e) => e !== "zip");
-  const primaryExt = romExts[0] || "nes";
+  const primaryExt = romExts[0] || (exts.includes("zip") ? "zip" : "nes");
   const allExtPattern = [...romExts, "zip"].join("|");
 
   const gameHost = document.getElementById("game");
@@ -40,11 +40,17 @@
   let myrientList = [];
   let myrientFiltered = [];
 
-  if (romFile && romExts.length) {
-    romFile.setAttribute(
-      "accept",
-      romExts.map((e) => `.${e}`).join(",") + ",application/zip,.zip"
-    );
+  if (romFile) {
+    const acceptList = [];
+    if (romExts.length) {
+      acceptList.push(romExts.map((e) => `.${e}`).join(","));
+    }
+    if (exts.includes("zip")) {
+      acceptList.push("application/zip,.zip");
+    }
+    if (acceptList.length) {
+      romFile.setAttribute("accept", acceptList.join(","));
+    }
   }
 
   function setStatus(text) {
@@ -161,14 +167,19 @@
       { type: "button", text: "Select", id: "select", location: "center", left: -48, top: 96, fontSize: 14, block: true, input_value: 2 },
       { type: "button", text: "Start", id: "start", location: "center", left: 48, top: 96, fontSize: 14, block: true, input_value: 3 },
     ];
-    const hasExternalPsxPad = isPsx && Array.isArray(window.EJS_VirtualGamepadSettings);
+    const existingPad = Array.isArray(window.EJS_VirtualGamepadSettings)
+      ? window.EJS_VirtualGamepadSettings
+      : null;
+
+    // Enable custom mode when we have a tailored pad
     if (isPsx) {
-      window.EJS_PSX_FORCE_DUALSHOCK = true;
-      // Force custom layout mode so external or fallback pads take effect
       window.EJS_virtualGamepadMode = "custom";
     }
-    window.EJS_VirtualGamepadSettings = hasExternalPsxPad
-      ? window.EJS_VirtualGamepadSettings
+    if (isPsx) {
+      window.EJS_PSX_FORCE_DUALSHOCK = true;
+    }
+    window.EJS_VirtualGamepadSettings = existingPad
+      ? existingPad
       : isPsx
       ? psxCustomPad
       : padSettings;
@@ -204,7 +215,9 @@
   function pickZipEntry(zip) {
     const names = Object.keys(zip.files);
     const target = names.find((name) =>
-      romExts.some((ext) => name.toLowerCase().endsWith(`.${ext}`))
+      romExts.length
+        ? romExts.some((ext) => name.toLowerCase().endsWith(`.${ext}`))
+        : !zip.files[name].dir
     );
     return target;
   }
