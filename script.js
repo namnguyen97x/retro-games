@@ -26,12 +26,24 @@
   const myrientStatus = document.getElementById("myrientStatus");
   const myrientField = document.getElementById("myrientField");
   const myrientSearch = document.getElementById("myrientSearch");
+  const resumeBtn = document.getElementById("resumeBtn");
   const overlayStatus = document.getElementById("overlayStatus");
   const frame = document.querySelector(".frame");
   let currentObjectUrl = null;
 
+  // Apply theme saved from landing page so players stay in sync.
+  (() => {
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const savedTheme = localStorage.getItem("theme");
+    const startDark = savedTheme ? savedTheme === "dark" : prefersDark;
+    if (body) body.classList.toggle("dark", startDark);
+  })();
+
   const LOADER_ID = "ejs-loader-script";
   const ZIP_LIB = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
+  const STORAGE_KEY = "ejs:lastSession";
   const DATA_PATHS = [
     "https://cdn.emulatorjs.org/stable/data/",
     "https://emulatorjs.org/data/",
@@ -212,6 +224,33 @@
     loadNext();
   }
 
+  function saveLastSession(data) {
+    try {
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({
+          core: CORE,
+          label: data?.label || "",
+          url: data?.url || "",
+          source: data?.source || "url",
+        })
+      );
+    } catch (err) {
+      console.warn("Khong luu duoc session", err);
+    }
+  }
+
+  function readLastSession() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return null;
+      return JSON.parse(raw);
+    } catch (err) {
+      console.warn("Khong doc duoc session", err);
+      return null;
+    }
+  }
+
   function pickZipEntry(zip) {
     const names = Object.keys(zip.files);
     const target = names.find((name) =>
@@ -267,6 +306,11 @@
     if (urlValue) {
       releaseCurrentObjectUrl();
       injectEmulator(urlValue, urlValue);
+      saveLastSession({
+        label: urlValue,
+        url: urlValue,
+        source: "url",
+      });
       return;
     }
 
@@ -465,6 +509,11 @@
           releaseCurrentObjectUrl();
           currentObjectUrl = URL.createObjectURL(blob);
           injectEmulator(currentObjectUrl, item.title);
+          saveLastSession({
+            label: item.title,
+            url: item.url,
+            source: "myrient",
+          });
         }
       } catch (err) {
         console.error(err);
@@ -503,5 +552,73 @@
 
   if (!MYRIENT_DIR && myrientField) {
     myrientField.style.display = "none";
+  }
+
+  const lastSession = (() => {
+    const data = readLastSession();
+    if (!data || data.core !== CORE || !data.url) return null;
+    return data;
+  })();
+
+  function loadLastSession(session) {
+    if (!session || !session.url) {
+      setStatus("Khong co game de mo lai.");
+      return;
+    }
+    if (romFile) romFile.value = "";
+    if (romUrl) romUrl.value = session.url;
+
+    if (session.source === "myrient") {
+      (async () => {
+        try {
+          resetContainer();
+          if (resumeBtn) resumeBtn.disabled = true;
+          setStatus("Dang tai ROM tu danh sach da luu...");
+          const buffer = await fetchBinaryWithFallback(session.url);
+          const ext = (session.url.split(".").pop() || "").toLowerCase();
+          if (ext === "zip") {
+            await ensureZipLib();
+            const zip = await JSZip.loadAsync(buffer);
+            const entry = pickZipEntry(zip);
+            if (!entry) throw new Error(`ZIP khong co file .${primaryExt}`);
+            const romBuffer = await zip.files[entry].async("arraybuffer");
+            const blob = new Blob([romBuffer], {
+              type: "application/octet-stream",
+            });
+            releaseCurrentObjectUrl();
+            currentObjectUrl = URL.createObjectURL(blob);
+            injectEmulator(currentObjectUrl, session.label || entry);
+          } else {
+            const blob = new Blob([buffer], {
+              type: "application/octet-stream",
+            });
+            releaseCurrentObjectUrl();
+            currentObjectUrl = URL.createObjectURL(blob);
+            injectEmulator(currentObjectUrl, session.label || session.url);
+          }
+        } catch (err) {
+          console.error(err);
+          setStatus("Khong tai duoc ROM da luu: " + (err?.message || err));
+        } finally {
+          if (resumeBtn) resumeBtn.disabled = false;
+        }
+      })();
+      return;
+    }
+
+    resetContainer();
+    setStatus("Dang tai lai ROM...");
+    releaseCurrentObjectUrl();
+    injectEmulator(session.url, session.label || session.url);
+  }
+
+  if (resumeBtn) {
+    if (lastSession) {
+      resumeBtn.disabled = false;
+      resumeBtn.textContent = `Mo lai: ${lastSession.label || "ROM truoc"}`;
+      resumeBtn.addEventListener("click", () => loadLastSession(lastSession));
+    } else {
+      resumeBtn.disabled = true;
+    }
   }
 })();

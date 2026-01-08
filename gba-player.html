@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SNES | EmulatorJS Player</title>
+  <title>GBA | EmulatorJS Player</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="page page--player" data-core="snes" data-label="SNES" data-exts="sfc,smc,zip" data-myrient="https://myrient.erista.me/files/RetroAchievements/RA%20-%20Super%20Nintendo%20Entertainment%20System/">
+<body class="page page--player" data-core="gba" data-label="GBA" data-exts="gba,zip" data-myrient="https://myrient.erista.me/files/No-Intro/Nintendo%20-%20Game%20Boy%20Advance/">
   <div class="topbar">
     <div class="brand"></div>
     <div class="topbar__actions">
@@ -26,8 +26,8 @@
       </div>
       <ul class="tips">
         <li>Nhan menu noi (ba gach) trong khung EmulatorJS de vao Settings &gt; Controls hoac Cheats.</li>
-        <li>Phim mac dinh: mui ten di chuyen, A/B, X/Y, L/R, Start/Select. Gamepad vat ly duoc nhan tu dong.</li>
-        <li>Neu can tai ROM khac, chon file/URL va bam "Nap ROM SNES".</li>
+        <li>Phim mac dinh: mui ten di chuyen, Z/A, X/B, A/L, S/R, Enter/Start, Backspace/Select. Gamepad vat ly duoc nhan tu dong.</li>
+        <li>Neu can tai ROM khac, chon file/URL va bam "Nap ROM GBA".</li>
       </ul>
     </section>
 
@@ -35,25 +35,25 @@
       <h2>Nap ROM</h2>
       <div class="controls">
         <div class="field">
-          <label for="romFile">Upload ROM (.sfc/.smc hoac .zip)</label>
-          <input class="input" type="file" id="romFile" accept=".sfc,.smc,.zip,application/zip">
+          <label for="romFile">Upload ROM (.gba hoac .zip)</label>
+          <input class="input" type="file" id="romFile" accept=".gba,.zip,application/zip">
           <p class="hint">File chi chay cuc bo, khong tai len server.</p>
         </div>
 
         <div class="field">
           <label for="romUrl">Hoac dan URL ROM truc tiep</label>
-          <input class="input" type="url" id="romUrl" placeholder="https://.../game.sfc hoac .zip">
+          <input class="input" type="url" id="romUrl" placeholder="https://.../game.gba hoac .zip">
           <p class="hint">Neu bi chan CORS, hay tai ve va dung upload.</p>
         </div>
 
         <div class="toolbar">
-          <button class="btn btn--primary" id="loadBtn">Nap ROM SNES</button>
+          <button class="btn btn--primary" id="loadBtn">Nap ROM GBA</button>
           <button class="btn" id="clearBtn">Xoa cau hinh</button>
           <button class="btn" id="resumeBtn" type="button" disabled>Mo lai game truoc</button>
         </div>
 
         <div class="field" id="myrientField">
-          <label>Thu vien Myrient (SNES)</label>
+          <label>Thu vien Myrient (GBA)</label>
           <input class="input" type="text" id="myrientSearch" placeholder="Tim ROM..." disabled>
           <div class="inline-select">
             <button class="btn" id="fetchMyrientBtn" type="button">Lay danh sach</button>
